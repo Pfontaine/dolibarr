@@ -111,6 +111,7 @@ class Societe extends CommonObject
     var $client;					// 0=no customer, 1=customer, 2=prospect, 3=customer and prospect
     var $prospect;					// 0=no prospect, 1=prospect
     var $fournisseur;				// 0=no supplier, 1=supplier
+    var $types;                     // Array of types todo ajouter la gestion des types
 
     var $code_client;
     var $code_fournisseur;
