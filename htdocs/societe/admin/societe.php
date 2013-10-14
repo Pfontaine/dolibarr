@@ -4,6 +4,7 @@
  * Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Peter Fontaine       <contact@peterfontaine.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -226,6 +227,63 @@ if ($action=="setaddrefinlist") {
 	}
 }
 
+//Activate multitype third parties
+if ($action=="allowmultitype") {
+    $allowmultitype = GETPOST('value','int');
+    $res = dolibarr_set_const($db, "SOCIETE_MULTIPLE_TYPES", $allowmultitype,'yesno',0,'',$conf->entity);
+    if (! $res > 0) $error++;
+    if (! $error)
+    {
+        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+    }
+    else
+    {
+        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+    }
+}
+
+//Activate show all third parties menu
+if ($action=="showallthirdpartiesmenu") {
+    $showallthirdpartiesmenu = GETPOST('value','int');
+    require_once DOL_DOCUMENT_ROOT.'/core/class/menubase.class.php';
+    $menu = new Menubase($db, 'all');
+    if ($showallthirdpartiesmenu) {
+        $menu->module = 'societe';
+        $menu->type = 'left';
+        $menu->mainmenu = 'companies';
+        $menu->leftmenu = 'viewall';
+        $menu->fk_menu = -1;
+        $menu->fk_mainmenu = 'companies';
+        $menu->fk_leftmenu = 'thirdparties';
+        $menu->position = 1000;
+        $menu->url = '/societe/societe.php';
+        $menu->titre = 'Voir tous';
+        $menu->perms = '$user->rights->societe->lire';
+        $menu->enabled = '$user->rights->societe->lire';
+        $menu->user = 0;
+        $showallthirdpartiesmenu = $menu->create($user);
+        if ($showallthirdpartiesmenu < 0) {
+            $error++;
+            $showallthirdpartiesmenu = 0;
+        }
+    } else {
+        $menu->fetch($conf->global->SOCIETE_SHOW_ALL_THIRD_PARTIES_MENU, $user);
+        if ($menu->delete($user) < 0)
+            $error++;
+    }
+    $res = dolibarr_set_const($db, "SOCIETE_SHOW_ALL_THIRD_PARTIES_MENU", $showallthirdpartiesmenu,'chaine',0,'',$conf->entity);
+    if (! $res > 0) $error++;
+    if (! $error)
+    {
+        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        header("Location: ".$_SERVER["PHP_SELF"]);
+        exit;
+    }
+    else
+    {
+        $mesg = "<font class=\"error\">".$langs->trans("Error").": ".$menu->error."</font>";
+    }
+}
 
 //Activate ProfId mandatory
 if ($action == 'setprofidmandatory')
@@ -797,6 +855,40 @@ else
 }
 print '</tr>';
 */
+
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td width="80%">'.$langs->trans("AllowThirdPartyMultiType").'</td>';
+if (!empty($conf->global->SOCIETE_MULTIPLE_TYPES))
+{
+    print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=allowmultitype&value=0">';
+    print img_picto($langs->trans("Activated"),'switch_on');
+    print '</a></td>';
+}
+else
+{
+    print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=allowmultitype&value=1">';
+    print img_picto($langs->trans("Disabled"),'switch_off');
+    print '</a></td>';
+}
+print '</tr>';
+
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td width="80%">'.$langs->trans("ShowAllThirdPartiesMenu").'</td>';
+if (!empty($conf->global->SOCIETE_SHOW_ALL_THIRD_PARTIES_MENU))
+{
+    print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=showallthirdpartiesmenu&value=0">';
+    print img_picto($langs->trans("Activated"),'switch_on');
+    print '</a></td>';
+}
+else
+{
+    print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=showallthirdpartiesmenu&value=1">';
+    print img_picto($langs->trans("Disabled"),'switch_off');
+    print '</a></td>';
+}
+print '</tr>';
 
 print '</table>';
 

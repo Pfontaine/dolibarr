@@ -453,7 +453,7 @@ class ThirdpartyCustomTypes
         $menu->fk_leftmenu = 'thirdparties';
         $menu->position = $this->customtypes_position[$name];
         // todo ici pour le lien vers le listing
-        $menu->url = DOL_URL_ROOT.'/societe/societe.php?search_type='.$name;
+        $menu->url = '/societe/societe.php?search_type='.$name;
         $menu->titre = $langs->transnoentities("List")." ".strtolower($this->customtypes_label[$name]);
         $menu->perms = '$user->rights->societe->'.$name.'->view';
         $menu->enabled = '$user->rights->societe->'.$name.'->view';
@@ -472,7 +472,7 @@ class ThirdpartyCustomTypes
             $menu2->fk_mainmenu = 'companies';
             $menu2->fk_leftmenu = $name;
             $menu2->position = $this->customtypes_position[$name];
-            $menu2->url = DOL_URL_ROOT.'/societe/soc.php?action=create&type='.$name;
+            $menu2->url = '/societe/soc.php?action=create&type='.$name;
             $menu2->titre = $langs->transnoentities("Add")." ".strtolower($this->customtypes_label[$name]);
             $menu2->perms = '$user->rights->societe->'.$name.'->create';
             $menu2->enabled = '$user->rights->societe->'.$name.'->view';
