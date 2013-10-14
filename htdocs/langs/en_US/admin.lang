@@ -977,6 +977,15 @@ ExtraFieldsSupplierInvoices=Complementary attributes (invoices)
 ExtraFieldsProject=Complementary attributes (projects)
 ExtraFieldsProjectTask=Complementary attributes (tasks)
 ExtraFieldHasWrongValue=Attribut %s has a wrong value.
+CustomTypeThirdParties=Third parties types
+DefineHereThirdPartyCustomTypes=Define here all your custom type of third parties, not already available by default, and that you want to be supported.
+TypeTitre=Third party types available
+NewCustomType=New third party type
+CustomTypeName=Third party type name
+EditCustomType=Edit third party type
+AllowThirdPartyMultiType=Allow multiples types for third parties
+MenuStatus=Show in left menu
+ShowAllThirdPartiesMenu=Add a link in left menu to list of all third parties
 AlphaNumOnlyCharsAndNoSpace=only alphanumericals characters without space
 SendingMailSetup=Setup of sendings by email
 SendmailOptionNotComplete=Warning, on some Linux systems, to send email from your email, sendmail execution setup must contains option -ba (parameter mail.force_extra_parameters into your php.ini file). If some recipients never receive emails, try to edit this PHP parameter with mail.force_extra_parameters = -ba).
