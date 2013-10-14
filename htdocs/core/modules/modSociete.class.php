@@ -132,6 +132,13 @@ class modSociete extends DolibarrModules
 		$this->const[$r][4] = 0;
 		$r++;
 
+        $this->const[$r][0] = "SOCIETE_MULTIPLE_TYPES";
+        $this->const[$r][1] = "yesno";
+        $this->const[$r][2] = "1";
+        $this->const[$r][3] = "";
+        $this->const[$r][4] = 0;
+        $r++;
+
 		// Boxes
 		$this->boxes = array();
 		$r=0;
@@ -257,6 +264,7 @@ class modSociete extends DolibarrModules
 		// Exports
 		//--------
 		$r=0;
+        // todo Modifier l'export
 
 		// Export list of third parties and attributes
 		$r++;

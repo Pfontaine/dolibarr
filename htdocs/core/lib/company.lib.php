@@ -6,6 +6,7 @@
  * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  * Copyright (C) 2013       Juanjo Menent		  	<jmenent@2byte.es>
  * Copyright (C) 2013       Christophe Battarel		<contact@altairis.fr>
+ * Copyright (C) 2013       Peter Fontaine          <contact@peterfontaine.fr>
  *  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,6 +199,11 @@ function societe_admin_prepare_head($object)
     $head[$h][0] = DOL_URL_ROOT.'/societe/admin/societe.php';
     $head[$h][1] = $langs->trans("Miscellaneous");
     $head[$h][2] = 'general';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT.'/societe/admin/societe_type.php';
+    $head[$h][1] = $langs->trans("CustomTypeThirdParties");
+    $head[$h][2] = 'customtype';
     $h++;
 
     // Show more tabs from modules
