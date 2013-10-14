@@ -19,6 +19,6 @@
 
 ALTER TABLE llx_societe_types_societe ADD INDEX ik_societe_types_societe_socid(socid);
 ALTER TABLE llx_societe_types_societe ADD INDEX ik_societe_types_societe_typid(typid);
-ALTER TABLE llx_societe_types_societe ADD FOREIGN KEY (socid) REFERENCES  dolibarr_devel.llx_societe (rowid) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE llx_societe_types_societe ADD FOREIGN KEY (typid) REFERENCES  dolibarr_devel.llx_societe_types (numero) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE llx_societe_types_societe ADD CONSTRAINT fk_societe_rowid FOREIGN KEY (socid) REFERENCES  llx_societe (rowid) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE llx_societe_types_societe ADD CONSTRAINT fk_societe_types_numero FOREIGN KEY (typid) REFERENCES  llx_societe_types (numero) ON DELETE CASCADE ON UPDATE CASCADE;
 

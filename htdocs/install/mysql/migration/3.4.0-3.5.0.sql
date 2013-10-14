@@ -294,32 +294,33 @@ ALTER TABLE llx_societe ADD mode_reglement_supplier integer NULL AFTER cond_regl
 ALTER TABLE llx_societe ADD cond_reglement_supplier integer NULL AFTER mode_reglement_supplier;
 
 -- Third Party type
-create table llx_societe_types (
-  numero     integer UNIQUE PRIMARY KEY,
-  tms        timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  name       varchar(255) NOT NULL,
-  label      varchar(255) NOT NULL,
-  position   integer not null,
-  status     tinyint not null default 1,
-  entity     integer not null default 0,
-  inmenu     integer not null default 1,
-  menuid1    integer,
-  menuid2    integer
+CREATE TABLE llx_societe_types (
+  numero     INTEGER UNIQUE PRIMARY KEY,
+  tms        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  name       VARCHAR(255) NOT NULL,
+  label      VARCHAR(255) NOT NULL,
+  position   INTEGER NOT NULL,
+  status     TINYINT NOT NULL DEFAULT 1,
+  entity     INTEGER NOT NULL DEFAULT 0,
+  inmenu     INTEGER NOT NULL DEFAULT 1,
+  menuid1    INTEGER,
+  menuid2    INTEGER
 )ENGINE=innodb;
 create table llx_societe_types_societe (
-  rowid      integer AUTO_INCREMENT PRIMARY KEY,
-  socid      integer not null,
-  typid      integer not null
+  rowid      INTEGER AUTO_INCREMENT PRIMARY KEY,
+  socid      INTEGER NOT NULL,
+  typid      INTEGER NOT NULL
 )ENGINE=innodb;
 ALTER TABLE llx_societe_types ADD UNIQUE uk_societe_types_name(name);
 ALTER TABLE llx_societe_types_societe ADD INDEX ik_societe_types_societe_socid(socid);
 ALTER TABLE llx_societe_types_societe ADD INDEX ik_societe_types_societe_typid(typid);
-ALTER TABLE llx_societe_types_societe ADD FOREIGN KEY (socid) REFERENCES  dolibarr_devel.llx_societe (rowid) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE llx_societe_types_societe ADD FOREIGN KEY (typid) REFERENCES  dolibarr_devel.llx_societe_types (numero) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE llx_societe_types_societe ADD CONSTRAINT fk_societe_rowid FOREIGN KEY (socid) REFERENCES  llx_societe (rowid) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE llx_societe_types_societe ADD CONSTRAINT fk_societe_types_numero FOREIGN KEY (typid) REFERENCES  llx_societe_types (numero) ON DELETE CASCADE ON UPDATE CASCADE;
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (0, "aucun", "Aucun", 1, 1);
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (1, "client", "Client", 2, 1);
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (2, "prospect", "Prospect", 3, 1);
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (3, "fournisseur", "Fournisseur", 4, 1);
+-- TODO Convertir les anciens enregistrement societe en nouveau
 
 
 ALTER TABLE llx_facture_fourn ADD fk_mode_reglement integer NULL AFTER fk_cond_reglement;
