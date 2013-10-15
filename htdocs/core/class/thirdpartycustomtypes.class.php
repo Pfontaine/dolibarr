@@ -494,6 +494,37 @@ class ThirdpartyCustomTypes
         }
     }
 
+    /**
+     * get types of one third party
+     *
+     * @param   int         $socid      third party id
+     * @return  array|int               <0 if KO, array of types if OK
+     */
+    function getTypes($socid) {
+        $sql = "SELECT t.name AS name FROM";
+        $sql.= " ".MAIN_DB_PREFIX."societe_types AS t,";
+        $sql.= " ".MAIN_DB_PREFIX."societe_types_societe AS ts";
+        $sql.= " WHERE ts.socid = ".$socid;
+        $sql.= " AND ts.typid = t.numero";
+
+        $resql = $this->db->query($sql);
+
+        if ($resql) {
+            $count = $this->db->num_rows($resql);
+            $types = array();
+            if ($count > 0) {
+                while ($obj = $this->db->fetch_object($resql)) {
+                    $types[] = $obj->name;
+                }
+            }
+
+            return $types;
+        } else {
+            $this->error[] = "SQL Error: ".$this->db->error;
+            return -1;
+        }
+    }
+
     private function checkNumero($numero)
     {
         if ($numero < 1000000)
