@@ -835,12 +835,17 @@ class Societe extends CommonObject
                 $this->client      = $obj->client;
                 $this->fournisseur = $obj->fournisseur;
 
+                // types de tiers
                 $customtypes = new ThirdpartyCustomTypes($this->db);
-                $types = $customtypes->getTypes($this->id);
+                $types = $customtypes->getTypes($this->id); // On charge les types du tiers
                 if (is_array($types)) {
-                    if (count($types) > 0)
+                    if (count($types) > 0) {
+                        // On vérifie la correspondance entre client/fournisseur et type,
+                        // dans le cas où client et fournisseur aurait était directement changer en base
+                        $types = $this->verifyTypes($this->client, $this->fournisseur, $types, $this->id);
                         $this->types = $types;
-                    else {
+                    }
+                    else { // S'il n'a pas de type, on le migre
                         if ($this->migrate() < 0) {
                             $this->error = 'Error during migration client/fournisseur to types';
                             return -1;
@@ -2816,7 +2821,6 @@ class Societe extends CommonObject
 
 	}
 
-    // todo peter ajouter fonction conversion
     private function clientfourniseur2types($client, $fournisseur)
     {
         if ($client == 0 && $fournisseur == 0)
@@ -2831,7 +2835,6 @@ class Societe extends CommonObject
             if ($fournisseur == 1)
                 $types[] = 'fournisseur';
         }
-
         return $types;
     }
 
@@ -2844,12 +2847,12 @@ class Societe extends CommonObject
             $fournisseur = 0;
             if (in_array('client',$types))
                 $client = $client + 1;
-            if (in_array('propect', $types))
+            if (in_array('prospect', $types))
                 $client = $client + 2;
             if (in_array('fournisseur', $types))
                 $fournisseur = 1;
 
-            $ret = array('client'=>$client, 'founisseur'=>$fournisseur);
+            $ret = array('client'=>$client, 'fournisseur'=>$fournisseur);
         }
 
         return $ret;
@@ -2858,21 +2861,51 @@ class Societe extends CommonObject
     /**
      * migrate thirdparty
      *
-     * @param   bool    $push2base      default true, push in base the new types
-     * @return  int                     <0 if KO, >0 if OK, nothing if push2base is false
+     * @param   bool    $push2db      default true, push in base the new types
+     * @return  int                   <0 if KO, >0 if OK, nothing if push2db is false
      */
-    private function migrate($push2base = true) {
+    private function migrate($push2db = true) {
         $this->types = $this->clientfourniseur2types($this->client, $this->fournisseur);
-        if ($push2base) {
+        if ($push2db) {
             $customtypes = new ThirdpartyCustomTypes($this->db);
             foreach ($this->types as $type) {
-                $add = $customtypes->addType2ThirdParty($this->id, $type);
+                $add = $customtypes->addType($this->id, $type);
                 if ($add < 0) {
                     $this->error[] = "Can't add ".$type.": ".$customtypes->error[count($customtypes->error) - 1];
                     return -1;
                 }
             }
             return 1;
+        }
+    }
+
+    private function verifyTypes($client, $fournisseur, $types, $socid) {
+        $types_tiers = $this->types2clientfournisseur($types);
+        $customtype = new ThirdpartyCustomTypes($this->db);
+        $customtype->fetch();
+        if (($client == $types_tiers['client']) && ($fournisseur == $types_tiers['fournisseur']))
+            return $types;
+        else {
+            foreach (array('aucun','client','prospect','fournisseur') as $type)
+                if (in_array($type, $types)) {
+                    $customtype->delType($socid, $type);
+                }
+
+            $newtypes = $this->clientfourniseur2types($client, $fournisseur);
+            $ct = false;
+            foreach ($types as $type) {
+                if (!in_array($type, array('aucun','client','prospect','fournisseur')))
+                    $ct = true;
+            }
+            if ($ct && $newtypes[0] == 'aucun')
+                return $types;
+            else {
+                foreach ($types = $this->clientfourniseur2types($client, $fournisseur) as $type)
+                    $customtype->addType($socid, $type);
+
+                return $types;
+            }
+
         }
     }
 

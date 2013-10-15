@@ -441,7 +441,7 @@ class ThirdpartyCustomTypes
 
         $numero = $this->customtypes_numero[$type];
 
-        if ($numero) {
+        if ($numero >= 0) {
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe_types_societe";
             $sql.= "(socid,typid) VALUES(";
             $sql.= $socid.", ";
@@ -474,7 +474,7 @@ class ThirdpartyCustomTypes
 
         $numero = $this->customtypes_numero[$type];
 
-        if ($numero) {
+        if ($numero >= 0) {
             $sql = "DELETE FROM ".MAIN_DB_PREFIX."societe_types_societe";
             $sql.= " WHERE";
             $sql.= " socid = ".$socid;
