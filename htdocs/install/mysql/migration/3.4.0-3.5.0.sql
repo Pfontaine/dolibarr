@@ -316,11 +316,11 @@ ALTER TABLE llx_societe_types_societe ADD INDEX ik_societe_types_societe_socid(s
 ALTER TABLE llx_societe_types_societe ADD INDEX ik_societe_types_societe_typid(typid);
 ALTER TABLE llx_societe_types_societe ADD CONSTRAINT fk_societe_rowid FOREIGN KEY (socid) REFERENCES  llx_societe (rowid) ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE llx_societe_types_societe ADD CONSTRAINT fk_societe_types_numero FOREIGN KEY (typid) REFERENCES  llx_societe_types (numero) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE llx_societe_types_societe ADD UNIQUE uk_societe_type_societe_socid_typ_id(socid, typid);
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (0, "aucun", "Aucun", 1, 1);
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (1, "client", "Client", 2, 1);
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (2, "prospect", "Prospect", 3, 1);
 INSERT INTO llx_societe_types (numero, name, label, position, status) VALUES (3, "fournisseur", "Fournisseur", 4, 1);
--- TODO Convertir les anciens enregistrement societe en nouveau
 
 
 ALTER TABLE llx_facture_fourn ADD fk_mode_reglement integer NULL AFTER fk_cond_reglement;
