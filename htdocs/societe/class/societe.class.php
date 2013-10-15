@@ -29,7 +29,7 @@
  *	\brief      File for third party class
  */
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
-
+require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartycustomtypes.class.php';
 
 /**
  *	Class to manage third parties objects (customers, suppliers, prospects...)
@@ -111,7 +111,7 @@ class Societe extends CommonObject
     var $client;					// 0=no customer, 1=customer, 2=prospect, 3=customer and prospect
     var $prospect;					// 0=no prospect, 1=prospect
     var $fournisseur;				// 0=no supplier, 1=supplier
-    var $types;                     // Array of types todo ajouter la gestion des types
+    var $types;                     // Array of types
 
     var $code_client;
     var $code_fournisseur;
@@ -165,6 +165,7 @@ class Societe extends CommonObject
         $this->forme_juridique_code  = 0;
         $this->tva_assuj = 1;
         $this->status = 1;
+        $this->types = array();
 
         return 1;
     }
@@ -419,6 +420,7 @@ class Societe extends CommonObject
         $this->idprof5		= (! empty($this->idprof5)?trim($this->idprof5):'');
         $this->idprof6		= (! empty($this->idprof6)?trim($this->idprof6):'');
         $this->prefix_comm	= trim($this->prefix_comm);
+        //todo peter cleaner les types
 
         $this->tva_assuj	= trim($this->tva_assuj);
         $this->tva_intra	= dol_sanitizeFileName($this->tva_intra,'');
@@ -732,6 +734,7 @@ class Societe extends CommonObject
         if ($idprof3) $sql .= " WHERE s.ape = '".$this->db->escape($idprof3)."' AND s.entity IN (".getEntity($this->element, 1).")";
         if ($idprof4) $sql .= " WHERE s.idprof4 = '".$this->db->escape($idprof4)."' AND s.entity IN (".getEntity($this->element, 1).")";
 
+
         $resql=$this->db->query($sql);
         dol_syslog(get_class($this)."::fetch ".$sql);
         if ($resql)
@@ -832,6 +835,22 @@ class Societe extends CommonObject
                 $this->client      = $obj->client;
                 $this->fournisseur = $obj->fournisseur;
 
+                $customtypes = new ThirdpartyCustomTypes($this->db);
+                $types = $customtypes->getTypes($this->id);
+                if (is_array($types)) {
+                    if (count($types) > 0)
+                        $this->types = $types;
+                    else {
+                        if ($this->migrate() < 0) {
+                            $this->error = 'Error during migration client/fournisseur to types';
+                            return -1;
+                        }
+                    }
+                } else {
+                    $this->error = $customtypes->error[count($customtypes->error)-1];
+                    return -1;
+                }
+
                 $this->note = $obj->note_private; // TODO Deprecated for backward comtability
                 $this->note_private = $obj->note_private;
                 $this->note_public = $obj->note_public;
@@ -899,7 +918,7 @@ class Societe extends CommonObject
     			$sql.= " AND client = ".$type;
     		elseif ($type == 3)
     			$sql.= " AND fournisseur = 1";
-    	}
+    	} // todo peter ajouter la recherche par type
     	if (! empty($name))
     	{
     		if (! $exact)
@@ -1136,7 +1155,7 @@ class Societe extends CommonObject
      *
      *	@return		int		<0 if KO, >0 if OK
      */
-    function set_as_client()
+    function set_as_client() // todo peter modifier pour nouvelle version type
     {
         if ($this->id)
         {
@@ -1443,7 +1462,7 @@ class Societe extends CommonObject
 
         $result='';
         $lien=$lienfin='';
-
+        // todo peter modifier pour nouveaux types
         if ($option == 'customer' || $option == 'compta')
         {
            $lien = '<a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$this->id;
@@ -2796,5 +2815,65 @@ class Societe extends CommonObject
 		if ($statut==3) return $langs->trans("ProspectCustomer");
 
 	}
+
+    // todo peter ajouter fonction conversion
+    private function clientfourniseur2types($client, $fournisseur)
+    {
+        if ($client == 0 && $fournisseur == 0)
+            $types[] = 'aucun';
+        else {
+            if ($client == 1)
+                $types[] = 'client';
+            if ($client == 2)
+                $types[] = 'prospect';
+            if ($client == 3)
+                $types = array('client', 'prospect');
+            if ($fournisseur == 1)
+                $types[] = 'fournisseur';
+        }
+
+        return $types;
+    }
+
+    private function types2clientfournisseur($types)
+    {
+        if (in_array('aucun', $types))
+            $ret = array('client'=>0, 'fournisseur'=>0);
+        else {
+            $client = 0;
+            $fournisseur = 0;
+            if (in_array('client',$types))
+                $client = $client + 1;
+            if (in_array('propect', $types))
+                $client = $client + 2;
+            if (in_array('fournisseur', $types))
+                $fournisseur = 1;
+
+            $ret = array('client'=>$client, 'founisseur'=>$fournisseur);
+        }
+
+        return $ret;
+    }
+
+    /**
+     * migrate thirdparty
+     *
+     * @param   bool    $push2base      default true, push in base the new types
+     * @return  int                     <0 if KO, >0 if OK, nothing if push2base is false
+     */
+    private function migrate($push2base = true) {
+        $this->types = $this->clientfourniseur2types($this->client, $this->fournisseur);
+        if ($push2base) {
+            $customtypes = new ThirdpartyCustomTypes($this->db);
+            foreach ($this->types as $type) {
+                $add = $customtypes->addType2ThirdParty($this->id, $type);
+                if ($add < 0) {
+                    $this->error[] = "Can't add ".$type.": ".$customtypes->error[count($customtypes->error) - 1];
+                    return -1;
+                }
+            }
+            return 1;
+        }
+    }
 
 }

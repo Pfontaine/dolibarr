@@ -579,7 +579,7 @@ else
         }
         $modCodeFournisseur = new $module;
 
-        // todo modifier ici le type pour la creation
+        // todo peter modifier ici le type pour la creation
         //if ($_GET["type"]=='cp') { $object->client=3; }
         if (GETPOST("type")!='f')  { $object->client=3; }
         if (GETPOST("type")=='c')  { $object->client=1; }
