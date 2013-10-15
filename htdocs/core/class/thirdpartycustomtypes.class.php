@@ -428,6 +428,71 @@ class ThirdpartyCustomTypes
         }
     }
 
+    /**
+     * Add type to third party
+     *
+     * @param   int     $socid      id of third party
+     * @param   string  $type       name of type
+     * @return  int                 <0 if KO, >0 if OK
+     */
+    function addType($socid, $type) {
+        if (!$this->fetched)
+            $this->fetch();
+
+        $numero = $this->customtypes_numero[$type];
+
+        if ($numero) {
+            $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe_types_societe";
+            $sql.= "(socid,typid) VALUES(";
+            $sql.= $socid.", ";
+            $sql.= $numero.")";
+
+            $resql = $this->db->query($sql);
+
+            if (!$resql) {
+                $this->error[] = "SQL Error: ".$this->db->error;
+                return -1;
+            }
+
+            return 1;
+        } else {
+            $this->error[] = 'Type not found';
+            return -1;
+        }
+    }
+
+    /**
+     * Delete Type from third party
+     *
+     * @param   int     $socid      third party id
+     * @param   string  $type       name of type
+     * @return  int                 <0 if KO, >0 if OK
+     */
+    function delType($socid, $type) {
+        if ($this->fetched)
+            $this->fetch();
+
+        $numero = $this->customtypes_numero[$type];
+
+        if ($numero) {
+            $sql = "DELETE FROM ".MAIN_DB_PREFIX."societe_types_societe";
+            $sql.= " WHERE";
+            $sql.= " socid = ".$socid;
+            $sql.= " AND typid = ".$numero;
+
+            $resql = $this->db->query($sql);
+
+            if (!$resql) {
+                $this->error[] = "SQL Error: ".$this->db->error;
+                return -1;
+            }
+
+            return 1;
+        } else {
+            $this->error[] = 'Type not found';
+            return -1;
+        }
+    }
 
     private function checkNumero($numero)
     {
