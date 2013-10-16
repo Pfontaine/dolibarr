@@ -191,6 +191,14 @@ class Societe extends CommonObject
         if (empty($this->client))      $this->client=0;
         if (empty($this->fournisseur)) $this->fournisseur=0;
         $this->import_key = trim($this->import_key);
+        if(count($this->types) == 0)
+            $this->types = $this->clientfourniseur2types($this->client, $this->fournisseur);
+        else {
+            $this->types = $this->cleanTypes($this->types);
+            $cf = $this->types2clientfournisseur($this->types);
+            $this->client = $cf['client'];
+            $this->fournisseur = $cf['fournisseur'];
+        }
 
         dol_syslog(get_class($this)."::create ".$this->name);
 
@@ -232,7 +240,10 @@ class Societe extends CommonObject
             {
                 $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."societe");
 
+                $inittypeok = $this->initTypes();
+
                 $ret = $this->update($this->id,$user,0,1,1,'add');
+
 
                 // Ajout du commercial affecte
                 if ($this->commercial_id != '' && $this->commercial_id != -1)
@@ -245,7 +256,7 @@ class Societe extends CommonObject
                     $this->add_commercial($user, $user->id);
                 }
 
-                if ($ret >= 0)
+                if ($ret >= 0 && $inittypeok >0)
                 {
                     // Appel des triggers
                     include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
@@ -395,6 +406,9 @@ class Societe extends CommonObject
 
         $now=dol_now();
 
+        $customtypes = new ThirdpartyCustomTypes($this->db);
+        $customtypes->fetch();
+
         // Clean parameters
         $this->id			= $id;
         $this->name			= $this->name?trim($this->name):trim($this->nom);
@@ -420,7 +434,7 @@ class Societe extends CommonObject
         $this->idprof5		= (! empty($this->idprof5)?trim($this->idprof5):'');
         $this->idprof6		= (! empty($this->idprof6)?trim($this->idprof6):'');
         $this->prefix_comm	= trim($this->prefix_comm);
-        //todo peter cleaner les types
+        $this->types        = $this->cleanTypes($this->types);
 
         $this->tva_assuj	= trim($this->tva_assuj);
         $this->tva_intra	= dol_sanitizeFileName($this->tva_intra,'');
@@ -484,6 +498,21 @@ class Societe extends CommonObject
         	}
 
         	$supplier=true;
+        }
+
+        // Check Types
+        $cf = $this->types2clientfournisseur($this->types);
+        if (!($cf['client'] == $this->client && $cf['fournisseur'] == $this->fournisseur)) {
+            $soctmp = new Societe($this->db);
+            $soctmp->fetch($this->id);
+            if ($customtypes->isEqual($this->types, $soctmp->types)) {
+                $nt = $this->clientfourniseur2types($this->client, $this->fournisseur);
+                $this->types = array_merge($nt, $this->types);
+                $this->types = $this->cleanTypes($this->types);
+            } else {
+                $this->client = $cf['client'];
+                $this->fournisseur = $cf['fournisseur'];
+            }
         }
 
         $this->db->begin();
@@ -628,6 +657,13 @@ class Societe extends CommonObject
                 	}
                 }
                 else if ($reshook < 0) $error++;
+
+                // Actions on types
+                $customtypes->fetch();
+                if ($customtypes->updateTypes($this->id, $this->types) < 0) {
+                    $this->error = "Can't update types ".$customtypes->error;
+                    $error++;
+                }
 
                 if (! $error && $call_trigger)
                 {
@@ -901,6 +937,8 @@ class Societe extends CommonObject
     /**
      * 	Search and fetch thirparties by name
      *
+     * @todo ajouter prise en charge customtypes
+     *
      * 	@param		string		$name		Name
      * 	@param		int			$type		Type of thirdparties (0=any, 1=customer, 2=prospect, 3=supplier)
      * 	@param		array		$filters	Array of couple field name/value to filter the companies with the same name
@@ -923,7 +961,7 @@ class Societe extends CommonObject
     			$sql.= " AND client = ".$type;
     		elseif ($type == 3)
     			$sql.= " AND fournisseur = 1";
-    	} // todo peter ajouter la recherche par type
+    	}
     	if (! empty($name))
     	{
     		if (! $exact)
@@ -1160,10 +1198,19 @@ class Societe extends CommonObject
      *
      *	@return		int		<0 if KO, >0 if OK
      */
-    function set_as_client() // todo peter modifier pour nouvelle version type
+    function set_as_client() //
     {
         if ($this->id)
         {
+            $customtypes = new ThirdpartyCustomTypes($this->db);
+            $customtypes->fetch();
+            if ($this->client == 0) {
+                if ($customtypes->delType($this->id, 'aucun') > 0)
+                    if ($customtypes->addType($this->id, 'client') < 0)
+                        return -1;
+                else
+                    return -1;
+            }
             $newclient=1;
             if ($this->client == 2 || $this->client == 3) $newclient=3;	//If prospect, we keep prospect tag
             $sql = "UPDATE ".MAIN_DB_PREFIX."societe";
@@ -1467,7 +1514,6 @@ class Societe extends CommonObject
 
         $result='';
         $lien=$lienfin='';
-        // todo peter modifier pour nouveaux types
         if ($option == 'customer' || $option == 'compta')
         {
            $lien = '<a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$this->id;
@@ -1487,6 +1533,17 @@ class Societe extends CommonObject
         else if ($option == 'category_supplier')
         {
         	$lien = '<a href="'.DOL_URL_ROOT.'/categories/categorie.php?id='.$this->id.'&type=1';
+        }
+
+        /**
+         * todo peter créer lors de l'init du module une constante du type SOCIETE_GETNOMURL_CUSTOMTYPE_xxxxxxxx
+         * où xxxxxxx est la valeur de $option
+         */
+        $constct = "SOCIETE_GETNOMURL_CUSTOMTYPE_".$option;
+        $urlct = $conf->global->$constct;
+        if ($urlct)
+        {
+            $lien = '<a href="'.DOL_URL_ROOT.$urlct.'?id='.$this->id;
         }
 
         // By default
@@ -2906,6 +2963,98 @@ class Societe extends CommonObject
                 return $types;
             }
 
+        }
+    }
+
+    /**
+     * clean types
+     *
+     * @param   array   $types      array of types
+     * @return  array               return array without duplicate entry & non-exist type
+     */
+    function cleanTypes($types)
+    {
+        $customtypes = new ThirdpartyCustomTypes($this->db);
+        $customtypes->fetch();
+        $new_types = array();
+        // Verify if type exist
+        foreach($types as $type) {
+            $numero = $customtypes->customtypes_numero[$type];
+            if (($numero >= 0)) {
+                $new_types[] = $type;
+            }
+        }
+
+        if (count($new_types) == 0)
+            $new_types[] = 'aucun';
+
+        // remove duplicate
+        if (count($new_types) >= 2) {
+            $check_types = array();
+            foreach($new_types as $type) {
+                if (!in_array($type, $check_types))
+                    $check_types[] = $type;
+            }
+            $new_types = $check_types;
+        }
+
+        // check compatibility between types
+        if (in_array('aucun', $new_types) && count($new_types) > 1) {
+            $id_aucun = -1;
+            $id_client = -1;
+            $id_prospect = -1;
+            foreach ($new_types as $key => $type) {
+                if ($type == 'aucun')
+                    $id_aucun = $key;
+                if ($type == 'client')
+                    $id_client = $key;
+                if ($type == 'prospect')
+                    $id_prospect = $key;
+            }
+            if ($id_aucun >= 0)
+                unset($new_types[$id_aucun]);
+            if ($id_client >= 0)
+                unset($new_types[$id_client]);
+            if ($id_prospect >= 0)
+                unset($new_types[$id_prospect]);
+        }
+        return $new_types;
+    }
+
+    /**
+     * init Types on new third party
+     *
+     * @return  int         <0 if KO, >0 if OK
+     */
+    function initTypes()
+    {
+        $customtypes = new ThirdpartyCustomTypes($this->db);
+        $customtypes->fetch();
+
+        $this->db->begin();
+
+        $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe_types_societe";
+        $sql.= "(socid, typid) ";
+        $sql.= "VALUES ";
+        $c = count($this->types) - 1;
+        foreach ($this->types as $type) {
+            $sql.= '('.$this->id.', '.$customtypes->customtypes_numero[$type].') ';
+            if ($c != 0) $sql.=", ";
+            $c--;
+        }
+
+        dol_syslog(get_class($this)."::initTypes execute sql: ".$sql);
+
+        $resql = $this->db->query($sql);
+
+        if ($resql) {
+            $this->db->commit();
+            return 1;
+        }
+        else {
+            $this->db->rollback();
+            $this->error = "Can't init types: ".$sql;
+            return -1;
         }
     }
 

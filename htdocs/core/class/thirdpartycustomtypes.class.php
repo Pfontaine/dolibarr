@@ -495,6 +495,26 @@ class ThirdpartyCustomTypes
     }
 
     /**
+     * Compare to list of types
+     *
+     * @param   array   $types1     first list
+     * @param   array   $types2     second list
+     * @return  bool                true if types are equals, else false
+     */
+    function isEqual($types1, $types2) {
+        if (!(count($types1) == count($types2))) {
+            return false;
+        }
+
+        foreach ($types1 as $type) {
+            if (!in_array($type, $types2))
+                return false;
+        }
+
+        return true;
+    }
+
+    /**
      * get types of one third party
      *
      * @param   int         $socid      third party id
@@ -523,6 +543,57 @@ class ThirdpartyCustomTypes
             $this->error[] = "SQL Error: ".$this->db->error;
             return -1;
         }
+    }
+
+    /**
+     * Update Types
+     * @param   int     $socid      Third party id
+     * @param   array   $types      array of types
+     * @return  bool                <0 if KO, >0 if OK
+     */
+    function updateTypes($socid, $types)
+    {
+        if (!$this->fetched)
+            $this->fetch();
+        $this->db->begin();
+        $sql = "DELETE FROM ".MAIN_DB_PREFIX."societe_types_societe WHERE socid = ".$socid;
+        $resql1 = $this->db->query($sql);
+        $sql2 = "INSERT INTO ".MAIN_DB_PREFIX."societe_types_societe(socid, typid) VALUES";
+        $c = count($types) - 1;
+        foreach ($types as $type) {
+            $sql2.= "(".$socid.", ".$this->customtypes_numero[$type].")";
+            if ($c != 0) $sql2.=", ";
+            $c--;
+        }
+        $resql2 = $this->db->query($sql2);
+
+        if ($resql1 && $resql2) {
+            $this->db->commit();
+            return 1;
+        } else {
+            $this->error = $sql.$sql2;
+            $this->db->rollback();
+            return -1;
+        }
+    }
+
+    /**
+     * Check if type exists
+     *
+     * @param   string  $type       name of type
+     * @return  bool                true if type exists, false otherwise
+     */
+    function exists($type)
+    {
+        if (!$this->fetched)
+            $this->fetch();
+
+        $numero = $this->customtypes_numero[$type];
+
+        if ($numero >= 0)
+            return true;
+        else
+            return false;
     }
 
     private function checkNumero($numero)
