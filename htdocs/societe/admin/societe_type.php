@@ -24,7 +24,7 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartiestypes.class.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/thirdpartiestypes.class.php';
 
 
 $langs->load("companies");
@@ -275,7 +275,7 @@ if ($action == 'create')
     print "<br>";
     print_titre($langs->trans('NewCustomType'));
 
-    require DOL_DOCUMENT_ROOT.'/core/tpl/admin_customtype_add.tpl.php';
+    require DOL_DOCUMENT_ROOT.'/societe/tpl/admin_customtype_add.tpl.php';
 }
 
 // Edit
@@ -284,7 +284,7 @@ if ($action == 'edit')
     print "<br>";
     print_titre($langs->trans('EditCustomType'));
 
-    require DOL_DOCUMENT_ROOT.'/core/tpl/admin_customtype_edit.tpl.php';
+    require DOL_DOCUMENT_ROOT.'/societe/tpl/admin_customtype_edit.tpl.php';
 }
 
 llxFooter();

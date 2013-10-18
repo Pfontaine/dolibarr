@@ -30,7 +30,7 @@
  *	\brief      File for third party class
  */
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartiestypes.class.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/thirdpartiestypes.class.php';
 
 /**
  *	Class to manage third parties objects (customers, suppliers, prospects...)

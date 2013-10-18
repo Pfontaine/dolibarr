@@ -26,7 +26,7 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartiestypes.class.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/thirdpartiestypes.class.php';
 
 $langs->load("companies");
 
