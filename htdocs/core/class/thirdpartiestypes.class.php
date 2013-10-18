@@ -16,25 +16,25 @@
  */
 
 /**
- *  \file       htdocs/core/class/thirdpartycustomtype.class.php
+ *  \file       htdocs/core/class/thirdpartiestypes.class.php
  *  \ingroup    core
- *  \brief      File of class to manage third party custom types
+ *  \brief      File of class to manage custom third parties types
  */
 
 /**
- * Class ThirdpartyCustomTypes
+ * Class ThirdPartiesTypes
  */
-class ThirdpartyCustomTypes
+class ThirdPartiesTypes
 {
     var $db;
     var $error;
 
-    var $customtypes_position;
-    var $customtypes_label;
-    var $customtypes_status;
-    var $customtypes_numero;
-    var $customtypes_inmenu;
-    var $customtypes_menuid;
+    var $types_position;
+    var $types_label;
+    var $types_status;
+    var $types_numero;
+    var $types_inmenu;
+    var $types_menuid;
 
     var $last_numero;
     var $last_position;
@@ -55,12 +55,12 @@ class ThirdpartyCustomTypes
         $this->last_numero = 1000000;
         $this->last_position = 0;
         $this->count = 0;
-        $this->customtypes_label = array();
-        $this->customtypes_position = array();
-        $this->customtypes_status = array();
-        $this->customtypes_numero = array();
-        $this->customtypes_inmenu = array();
-        $this->customtypes_menuid = array();
+        $this->types_label = array();
+        $this->types_position = array();
+        $this->types_status = array();
+        $this->types_numero = array();
+        $this->types_inmenu = array();
+        $this->types_menuid = array();
         $this->fetched = false;
     }
 
@@ -131,10 +131,10 @@ class ThirdpartyCustomTypes
 
         if ($resql1 && $resql2) {
 
-            $this->customtypes_position[$name] = $position;
-            $this->customtypes_status[$name] = $status;
-            $this->customtypes_numero[$name] = $numero;
-            $this->customtypes_label[$name] = $label;
+            $this->types_position[$name] = $position;
+            $this->types_status[$name] = $status;
+            $this->types_numero[$name] = $numero;
+            $this->types_label[$name] = $label;
 
             $this->db->commit();
             // On ajoute les menus
@@ -204,13 +204,13 @@ class ThirdpartyCustomTypes
 
             if ($this->count > 0) {
                 while ($obj = $this->db->fetch_object($resql)) {
-                    $this->customtypes_position[$obj->name] = $obj->position;
-                    $this->customtypes_label[$obj->name] = $obj->label;
-                    $this->customtypes_status[$obj->name] = $obj->status;
-                    $this->customtypes_numero[$obj->name] = $obj->numero;
-                    $this->customtypes_inmenu[$obj->name] = $obj->inmenu;
-                    $this->customtypes_menuid[$obj->name][0] = $obj->menuid1;
-                    $this->customtypes_menuid[$obj->name][1] = $obj->menuid2;
+                    $this->types_position[$obj->name] = $obj->position;
+                    $this->types_label[$obj->name] = $obj->label;
+                    $this->types_status[$obj->name] = $obj->status;
+                    $this->types_numero[$obj->name] = $obj->numero;
+                    $this->types_inmenu[$obj->name] = $obj->inmenu;
+                    $this->types_menuid[$obj->name][0] = $obj->menuid1;
+                    $this->types_menuid[$obj->name][1] = $obj->menuid2;
 
                     if ($obj->numero > $this->last_numero)
                         $this->last_numero = $obj->numero;
@@ -219,7 +219,7 @@ class ThirdpartyCustomTypes
                 if ($this->last_numero < 1000000)
                     $this->last_numero = 1000000;
 
-                $this->last_position = $this->customtypes_position[$this->count-1];
+                $this->last_position = $this->types_position[$this->count-1];
 
                 return 1;
             }
@@ -256,7 +256,7 @@ class ThirdpartyCustomTypes
         $resql = $this->db->query($sql);
 
         if ($resql) {
-            if ($this->customtypes_inmenu[$name])
+            if ($this->types_inmenu[$name])
                 $this->changeInMenuStatus($name, 0);
             return 1;
         } else {
@@ -327,13 +327,13 @@ class ThirdpartyCustomTypes
         $sql2.= " SET";
         $sql2.= " libelle = 'Créer nouvelle fiche ".$label."'";
         $sql2.= " WHERE";
-        $sql2.= " id = ".$this->customtypes_numero[$name]."001";
+        $sql2.= " id = ".$this->types_numero[$name]."001";
 
         $sql3 = "UPDATE ".MAIN_DB_PREFIX."rights_def";
         $sql3.= " SET";
         $sql3.= " libelle = 'Voir fiches ".$label."'";
         $sql3.= " WHERE";
-        $sql3.= " id = ".$this->customtypes_numero[$name]."002";
+        $sql3.= " id = ".$this->types_numero[$name]."002";
 
         $this->db->begin();
 
@@ -347,9 +347,9 @@ class ThirdpartyCustomTypes
         $resql3=$this->db->query($sql3);
 
         if ($resql1 && $resql2 && $resql3) {
-            if ($this->customtypes_inmenu[$name]) {
-                $this->customtypes_position[$name] = $position;
-                $this->customtypes_label[$name] = $label;
+            if ($this->types_inmenu[$name]) {
+                $this->types_position[$name] = $position;
+                $this->types_label[$name] = $label;
                 if (
                 $this->deleteMenu($name) &&
                 $this->createMenu($name)) {
@@ -386,13 +386,13 @@ class ThirdpartyCustomTypes
         $sql.= " WHERE name = '".$name."'";
 
         $sql2 = "DELETE FROM ".MAIN_DB_PREFIX."rights_def";
-        $sql2.= " WHERE id IN (".$this->customtypes_numero[$name]."001, ".$this->customtypes_numero[$name]."002)";
+        $sql2.= " WHERE id IN (".$this->types_numero[$name]."001, ".$this->types_numero[$name]."002)";
 
         $sql3 = "DELETE FROM ".MAIN_DB_PREFIX."user_rights";
-        $sql3.= " WHERE fk_id IN (".$this->customtypes_numero[$name]."001, ".$this->customtypes_numero[$name]."002)";
+        $sql3.= " WHERE fk_id IN (".$this->types_numero[$name]."001, ".$this->types_numero[$name]."002)";
 
         $sql4 = "DELETE FROM ".MAIN_DB_PREFIX."usergroup_rights";
-        $sql4.= " WHERE fk_id IN (".$this->customtypes_numero[$name]."001, ".$this->customtypes_numero[$name]."002)";
+        $sql4.= " WHERE fk_id IN (".$this->types_numero[$name]."001, ".$this->types_numero[$name]."002)";
 
         $this->db->begin();
 
@@ -410,7 +410,7 @@ class ThirdpartyCustomTypes
 
         if ($resql1 && $resql2 && $resql3 && $resql4)
         {
-            if ($this->customtypes_inmenu[$name]) {
+            if ($this->types_inmenu[$name]) {
                if (!$this->deleteMenu($name)) {
                    $this->db->rollback();
                    $this->error[] = "Can't delete menus";
@@ -439,7 +439,7 @@ class ThirdpartyCustomTypes
         if (!$this->fetched)
             $this->fetch();
 
-        $numero = $this->customtypes_numero[$type];
+        $numero = $this->types_numero[$type];
 
         if ($numero >= 0) {
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe_types_societe";
@@ -472,7 +472,7 @@ class ThirdpartyCustomTypes
         if ($this->fetched)
             $this->fetch();
 
-        $numero = $this->customtypes_numero[$type];
+        $numero = $this->types_numero[$type];
 
         if ($numero >= 0) {
             $sql = "DELETE FROM ".MAIN_DB_PREFIX."societe_types_societe";
@@ -561,7 +561,7 @@ class ThirdpartyCustomTypes
         $sql2 = "INSERT INTO ".MAIN_DB_PREFIX."societe_types_societe(socid, typid) VALUES";
         $c = count($types) - 1;
         foreach ($types as $type) {
-            $sql2.= "(".$socid.", ".$this->customtypes_numero[$type].")";
+            $sql2.= "(".$socid.", ".$this->types_numero[$type].")";
             if ($c != 0) $sql2.=", ";
             $c--;
         }
@@ -588,7 +588,7 @@ class ThirdpartyCustomTypes
         if (!$this->fetched)
             $this->fetch();
 
-        $numero = $this->customtypes_numero[$type];
+        $numero = $this->types_numero[$type];
 
         if ($numero >= 0)
             return true;
@@ -618,10 +618,10 @@ class ThirdpartyCustomTypes
         $menu->fk_menu = -1;
         $menu->fk_mainmenu = 'companies';
         $menu->fk_leftmenu = 'thirdparties';
-        $menu->position = $this->customtypes_position[$name];
+        $menu->position = $this->types_position[$name];
         // todo ici pour le lien vers le listing
         $menu->url = '/societe/societe.php?search_type='.$name;
-        $menu->titre = $langs->transnoentities("List")." ".strtolower($this->customtypes_label[$name]);
+        $menu->titre = $langs->transnoentities("List")." ".strtolower($this->types_label[$name]);
         $menu->perms = '$user->rights->societe->'.$name.'->view';
         $menu->enabled = '$user->rights->societe->'.$name.'->view';
         $menu->user = 0;
@@ -629,7 +629,7 @@ class ThirdpartyCustomTypes
         $idmenu = $menu->create($user);
 
         if ($idmenu > 0) {
-            $this->customtypes_menuid[$name][0] = $idmenu;
+            $this->types_menuid[$name][0] = $idmenu;
             $menu2 = new Menubase($this->db, 'all');
             $menu2->module = 'societe';
             $menu2->type = 'left';
@@ -638,9 +638,9 @@ class ThirdpartyCustomTypes
             $menu2->fk_menu = -1;
             $menu2->fk_mainmenu = 'companies';
             $menu2->fk_leftmenu = $name;
-            $menu2->position = $this->customtypes_position[$name];
+            $menu2->position = $this->types_position[$name];
             $menu2->url = '/societe/soc.php?action=create&type='.$name;
-            $menu2->titre = $langs->transnoentities("Add")." ".strtolower($this->customtypes_label[$name]);
+            $menu2->titre = $langs->transnoentities("Add")." ".strtolower($this->types_label[$name]);
             $menu2->perms = '$user->rights->societe->'.$name.'->create';
             $menu2->enabled = '$user->rights->societe->'.$name.'->view';
             $menu2->user = 0;
@@ -650,7 +650,7 @@ class ThirdpartyCustomTypes
             if ($idmenu2 < 0) {
                 return -1;
             } else {
-                $this->customtypes_menuid[$name][1] = $idmenu2;
+                $this->types_menuid[$name][1] = $idmenu2;
 
                 $sql = "UPDATE ".MAIN_DB_PREFIX.'societe_types';
                 $sql.= " SET";
@@ -677,9 +677,9 @@ class ThirdpartyCustomTypes
         require_once DOL_DOCUMENT_ROOT.'/core/class/menubase.class.php';
 
         $menu = new Menubase($this->db);
-        $menu->fetch($this->customtypes_menuid[$name][0]);
+        $menu->fetch($this->types_menuid[$name][0]);
         if ($menu->delete($user) > 0) {
-            $menu->fetch(($this->customtypes_menuid[$name][1]));
+            $menu->fetch(($this->types_menuid[$name][1]));
             if ($menu->delete($user) > 0) {
                 return 1;
             } else

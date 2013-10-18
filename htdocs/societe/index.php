@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Peter Fontaine       <contact@peterfontaine.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +26,7 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartiestypes.class.php';
 
 $langs->load("companies");
 
@@ -35,6 +37,9 @@ if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'societe',0,'','','','');
 
 $thirdparty_static = new Societe($db);
+
+$customtypes = new ThirdPartiesTypes($db);
+$customtypes->fetch();
 
 
 /*
@@ -91,6 +96,11 @@ $third = array(
 		'supplier' => 0,
 		'other' =>0
 );
+//$third = array();
+//foreach ($customtypes->types_label as $key => $value) {
+//    $third[$key]['label'] = $value;
+//    $third[$key]['count'] = 0;
+//}
 $total=0;
 
 $sql = "SELECT s.rowid, s.client, s.fournisseur";
@@ -101,6 +111,23 @@ if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND s.rowid = s
 if ($socid)	$sql.= " AND s.rowid = ".$socid;
 if (! $user->rights->fournisseur->lire) $sql.=" AND (s.fournisseur <> 1 OR s.client <> 0)";    // client=0, fournisseur=0 must be visible
 //print $sql;
+
+/*SELECT st.numero AS id, st.name AS type, COUNT(s.rowid) as nbr
+FROM llx_societe_types AS st
+	LEFT OUTER JOIN llx_societe_types_societe AS sts
+	ON st.numero = sts.typid
+	LEFT OUTER JOIN llx_societe AS s
+		INNER JOIN llx_societe_commerciaux as sc
+		ON s.rowid = sc.fk_soc
+        AND sc.fk_user = 1
+	ON sts.socid = s.rowid
+AND s.entity IN (0, 1)
+GROUP BY st.numero*/
+//$sql = "SELECT ct.name as name, COUNT(cts.typid) as count";
+//$sql.= " FROM ".MAIN_DB_PREFIX."societe_types as ct";
+//$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_types_societe as cts ON ct.numero = cts.typid";
+//$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = cts.socid";
+
 $result = $db->query($sql);
 if ($result)
 {

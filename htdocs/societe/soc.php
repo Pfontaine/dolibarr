@@ -6,6 +6,7 @@
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2008	   Patrick Raguin       <patrick.raguin@auguria.net>
  * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Peter Fontaine       <contact@peterfontaine.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -770,6 +771,7 @@ else
         if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1"'.($selected==1?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
         print '<option value="0"'.($selected==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
         print '</select></td>';
+        // todo peter remplacer cette partie
 
         print '<td width="25%">'.$langs->trans('CustomerCode').'</td><td width="25%">';
         print '<table class="nobordernopadding"><tr><td>';
@@ -785,6 +787,7 @@ else
 
         if (! empty($conf->fournisseur->enabled) && ! empty($user->rights->fournisseur->lire))
         {
+            // todo peter n'est plus nécessaire, trouver un moyen de gérer le code fournisseur
             // Supplier
             print '<tr>';
             print '<td><span class="fieldrequired">'.$langs->trans('Supplier').'</span></td><td>';
@@ -1156,6 +1159,7 @@ else
             }
 
             // Prospect/Customer
+            // todo peter remplacer ici
             print '<tr><td width="25%"><span class="fieldrequired">'.$langs->trans('ProspectCustomer').'</span></td><td width="25%"><select class="flat" name="client">';
             if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2"'.($object->client==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
             if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="3"'.($object->client==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
@@ -1188,6 +1192,7 @@ else
             print '</td></tr>';
 
             // Supplier
+            // todo peter, voir comment supprimer ici
             if (! empty($conf->fournisseur->enabled) && ! empty($user->rights->fournisseur->lire))
             {
                 print '<tr>';

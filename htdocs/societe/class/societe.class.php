@@ -8,6 +8,7 @@
  * Copyright (C) 2008      Patrick Raguin       <patrick.raguin@auguria.net>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
+ * Copyright (C) 2013      Peter Fontaine       <contact@peterfontaine.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +30,7 @@
  *	\brief      File for third party class
  */
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartycustomtypes.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartiestypes.class.php';
 
 /**
  *	Class to manage third parties objects (customers, suppliers, prospects...)
@@ -406,7 +407,7 @@ class Societe extends CommonObject
 
         $now=dol_now();
 
-        $customtypes = new ThirdpartyCustomTypes($this->db);
+        $customtypes = new ThirdPartiesTypes($this->db);
         $customtypes->fetch();
 
         // Clean parameters
@@ -872,7 +873,7 @@ class Societe extends CommonObject
                 $this->fournisseur = $obj->fournisseur;
 
                 // types de tiers
-                $customtypes = new ThirdpartyCustomTypes($this->db);
+                $customtypes = new ThirdPartiesTypes($this->db);
                 $types = $customtypes->getTypes($this->id); // On charge les types du tiers
                 if (is_array($types)) {
                     if (count($types) > 0) {
@@ -1202,7 +1203,7 @@ class Societe extends CommonObject
     {
         if ($this->id)
         {
-            $customtypes = new ThirdpartyCustomTypes($this->db);
+            $customtypes = new ThirdPartiesTypes($this->db);
             $customtypes->fetch();
             if ($this->client == 0) {
                 if ($customtypes->delType($this->id, 'aucun') > 0)
@@ -2924,7 +2925,7 @@ class Societe extends CommonObject
     private function migrate($push2db = true) {
         $this->types = $this->clientfourniseur2types($this->client, $this->fournisseur);
         if ($push2db) {
-            $customtypes = new ThirdpartyCustomTypes($this->db);
+            $customtypes = new ThirdPartiesTypes($this->db);
             foreach ($this->types as $type) {
                 $add = $customtypes->addType($this->id, $type);
                 if ($add < 0) {
@@ -2938,7 +2939,7 @@ class Societe extends CommonObject
 
     private function verifyTypes($client, $fournisseur, $types, $socid) {
         $types_tiers = $this->types2clientfournisseur($types);
-        $customtype = new ThirdpartyCustomTypes($this->db);
+        $customtype = new ThirdPartiesTypes($this->db);
         $customtype->fetch();
         if (($client == $types_tiers['client']) && ($fournisseur == $types_tiers['fournisseur']))
             return $types;
@@ -2974,12 +2975,12 @@ class Societe extends CommonObject
      */
     function cleanTypes($types)
     {
-        $customtypes = new ThirdpartyCustomTypes($this->db);
+        $customtypes = new ThirdPartiesTypes($this->db);
         $customtypes->fetch();
         $new_types = array();
         // Verify if type exist
         foreach($types as $type) {
-            $numero = $customtypes->customtypes_numero[$type];
+            $numero = $customtypes->types_numero[$type];
             if (($numero >= 0)) {
                 $new_types[] = $type;
             }
@@ -3028,7 +3029,7 @@ class Societe extends CommonObject
      */
     function initTypes()
     {
-        $customtypes = new ThirdpartyCustomTypes($this->db);
+        $customtypes = new ThirdPartiesTypes($this->db);
         $customtypes->fetch();
 
         $this->db->begin();
@@ -3038,7 +3039,7 @@ class Societe extends CommonObject
         $sql.= "VALUES ";
         $c = count($this->types) - 1;
         foreach ($this->types as $type) {
-            $sql.= '('.$this->id.', '.$customtypes->customtypes_numero[$type].') ';
+            $sql.= '('.$this->id.', '.$customtypes->types_numero[$type].') ';
             if ($c != 0) $sql.=", ";
             $c--;
         }

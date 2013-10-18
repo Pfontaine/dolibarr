@@ -24,14 +24,14 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartycustomtypes.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/thirdpartiestypes.class.php';
 
 
 $langs->load("companies");
 $langs->load("admin");
 $langs->load("members");
 
-$customtype = new ThirdpartyCustomTypes($db);
+$customtype = new ThirdPartiesTypes($db);
 $form = new Form($db);
 
 $action = GETPOST('action','alpha');
@@ -229,23 +229,23 @@ print "</tr>\n";
 $customtype->fetch();
 
 $var = false;
-foreach ($customtype->customtypes_position as $key => $value) {
+foreach ($customtype->types_position as $key => $value) {
     $var = !$var;
     print '<tr '.$bc[$var].'>'."\n";
-    print '<td align="center">'.$customtype->customtypes_position[$key].'</td>'."\n";
+    print '<td align="center">'.$customtype->types_position[$key].'</td>'."\n";
     // todo Supprimer la partie débug
     if ($conf->global->CUSTOMTYPES_DEBUG)
-        print '<td>'.$customtype->customtypes_numero[$key].'</td>'."\n";
-    print '<td>'.$customtype->customtypes_label[$key].'</td>'."\n";
-    if ($customtype->customtypes_numero[$key] >= 1000000 ) {
-        //print '<td align="center">'.$customtype->customtypes_status[$key].'</td>'."\n";
-        if ($customtype->customtypes_status[$key] == 1)
+        print '<td>'.$customtype->types_numero[$key].'</td>'."\n";
+    print '<td>'.$customtype->types_label[$key].'</td>'."\n";
+    if ($customtype->types_numero[$key] >= 1000000 ) {
+        //print '<td align="center">'.$customtype->types_status[$key].'</td>'."\n";
+        if ($customtype->types_status[$key] == 1)
             print '<td align=center><a href="'.$_SERVER['PHP_SELF'].'?action=disable&customtypename='.$key.'">'.img_picto($langs->trans("Enabled"),'switch_on').'</a></td>';
-        if ($customtype->customtypes_status[$key] == 0)
+        if ($customtype->types_status[$key] == 0)
             print '<td align=center><a href="'.$_SERVER['PHP_SELF'].'?action=enable&customtypename='.$key.'">'.img_picto($langs->trans("Disabled"),'switch_off').'</a></td>';
-        if ($customtype->customtypes_inmenu[$key] == 1)
+        if ($customtype->types_inmenu[$key] == 1)
             print '<td align=center><a href="'.$_SERVER['PHP_SELF'].'?action=disablemenu&customtypename='.$key.'">'.img_picto($langs->trans("Enabled"),'switch_on').'</a></td>';
-        if ($customtype->customtypes_inmenu[$key] == 0)
+        if ($customtype->types_inmenu[$key] == 0)
             print '<td align=center><a href="'.$_SERVER['PHP_SELF'].'?action=enablemenu&customtypename='.$key.'">'.img_picto($langs->trans("Disabled"),'switch_off').'</a></td>';
         print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=edit&customtypename='.$key.'">'.img_edit().'</a>';
         print "&nbsp; <a href=\"".$_SERVER["PHP_SELF"]."?action=delete&customtypename=$key\">".img_delete()."</a></td>\n";

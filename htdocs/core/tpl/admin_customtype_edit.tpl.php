@@ -27,9 +27,9 @@
     <table summary="listofattributes" class="border centpercent">
 
         <!-- Position -->
-        <tr><td class="fieldrequired"><?php echo $langs->trans("Position"); ?></td><td class="valeur"><input type="text" name="customtypepos" size="5" value="<?php  echo $customtype->customtypes_position[$customtypename];  ?>"></td></tr>
+        <tr><td class="fieldrequired"><?php echo $langs->trans("Position"); ?></td><td class="valeur"><input type="text" name="customtypepos" size="5" value="<?php  echo $customtype->types_position[$customtypename];  ?>"></td></tr>
         <!-- Label -->
-        <tr><td class="fieldrequired"><?php echo $langs->trans("Label"); ?></td><td class="valeur"><input type="text" name="customtypelabel" size="40" value="<?php echo $customtype->customtypes_label[$customtypename]; ?>"></td></tr>
+        <tr><td class="fieldrequired"><?php echo $langs->trans("Label"); ?></td><td class="valeur"><input type="text" name="customtypelabel" size="40" value="<?php echo $customtype->types_label[$customtypename]; ?>"></td></tr>
         <!-- Code -->
         <tr><td class="fieldrequired"><?php echo $langs->trans("CustomTypeName"); ?></td><td class="valeur"><?php echo $customtypename; ?></td></tr>
 
