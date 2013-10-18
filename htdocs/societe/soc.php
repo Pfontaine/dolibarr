@@ -175,6 +175,7 @@ if (empty($reshook))
         // Fill array 'array_options' with data from add form
         $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 
+
         if (GETPOST('deletephoto')) $object->logo = '';
         else if (! empty($_FILES['photo']['name'])) $object->logo = dol_sanitizeFileName($_FILES['photo']['name']);
 
@@ -201,7 +202,7 @@ if (empty($reshook))
             }
 
             // We set country_id, country_code and country for the selected country
-            $object->country_id=GETPOST('country_id')?GETPOST('country_id'):$mysoc->country_id;
+            $object->country_id=GETPOST('country_id')!=''?GETPOST('country_id'):$mysoc->country_id;
             if ($object->country_id)
             {
             	$tmparray=getCountry($object->country_id,'all');
@@ -831,7 +832,7 @@ else
 
         // Country
         print '<tr><td width="25%">'.$langs->trans('Country').'</td><td colspan="3">';
-        print $form->select_country($object->country_id,'country_id');
+        print $form->select_country((GETPOST('country_id')!=''?GETPOST('country_id'):$object->country_id),'country_id');
         if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
         print '</td></tr>';
 
@@ -1213,7 +1214,7 @@ else
                     print '<input type="text" name="code_fournisseur" size="16" value="'.$object->code_fournisseur.'" maxlength="15">';
                 }
                 else
-                {
+              {
                     print $object->code_fournisseur;
                     print '<input type="hidden" name="code_fournisseur" value="'.$object->code_fournisseur.'">';
                 }
@@ -1251,7 +1252,7 @@ else
 
             // Country
             print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
-            print $form->select_country($object->country_id,'country_id');
+            print $form->select_country((GETPOST('country_id')!=''?GETPOST('country_id'):$object->country_id),'country_id');
             if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
             print '</td></tr>';
 
@@ -1554,9 +1555,12 @@ else
 
         // Country
         print '<tr><td>'.$langs->trans("Country").'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'" class="nowrap">';
-        $img=picto_from_langcode($object->country_code);
-        if ($object->isInEEC()) print $form->textwithpicto(($img?$img.' ':'').$object->country,$langs->trans("CountryIsInEEC"),1,0);
-        else print ($img?$img.' ':'').$object->country;
+		if ($object->country_code)
+		{
+        	$img=picto_from_langcode($object->country_code);
+        	if ($object->isInEEC()) print $form->textwithpicto(($img?$img.' ':'').$object->country,$langs->trans("CountryIsInEEC"),1,0);
+        	else print ($img?$img.' ':'').$object->country;
+		}
         print '</td></tr>';
 
         // State
