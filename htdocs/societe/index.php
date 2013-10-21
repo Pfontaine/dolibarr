@@ -90,95 +90,111 @@ print "</table></form><br>";
 /*
  * Statistics area
  */
-$third = array(
-		'customer' => 0,
-		'prospect' => 0,
-		'supplier' => 0,
-		'other' =>0
-);
-//$third = array();
-//foreach ($customtypes->types_label as $key => $value) {
-//    $third[$key]['label'] = $value;
-//    $third[$key]['count'] = 0;
-//}
+$third = array();
+foreach ($customtypes->types_label as $key => $value) {
+    $third[$key]['label'] = $value;
+    $third[$key]['count'] = 0;
+}
 $total=0;
 
-$sql = "SELECT s.rowid, s.client, s.fournisseur";
-$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
-if (! $user->rights->societe->client->voir && ! $socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-$sql.= ' WHERE s.entity IN ('.getEntity('societe', 1).')';
-if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
-if ($socid)	$sql.= " AND s.rowid = ".$socid;
-if (! $user->rights->fournisseur->lire) $sql.=" AND (s.fournisseur <> 1 OR s.client <> 0)";    // client=0, fournisseur=0 must be visible
-//print $sql;
-
-/*SELECT st.numero AS id, st.name AS type, COUNT(s.rowid) as nbr
-FROM llx_societe_types AS st
-	LEFT OUTER JOIN llx_societe_types_societe AS sts
-	ON st.numero = sts.typid
-	LEFT OUTER JOIN llx_societe AS s
-		INNER JOIN llx_societe_commerciaux as sc
-		ON s.rowid = sc.fk_soc
-        AND sc.fk_user = 1
-	ON sts.socid = s.rowid
-AND s.entity IN (0, 1)
-GROUP BY st.numero*/
-//$sql = "SELECT ct.name as name, COUNT(cts.typid) as count";
-//$sql.= " FROM ".MAIN_DB_PREFIX."societe_types as ct";
-//$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_types_societe as cts ON ct.numero = cts.typid";
-//$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = cts.socid";
-
+$sql = "SELECT st.name AS type, COUNT(s.rowid) as nbr";
+$sql.= " FROM ".MAIN_DB_PREFIX."societe_types AS st";
+$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."societe_types_societe AS sts";
+$sql.= " ON st.numero = sts.typid";
+$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."societe AS s";
+if (! $user->rights->societe->client->voir && ! $socid) {
+    $sql.= " INNER JOIN ".MAIN_DB_PREFIX."societe_commerciaux AS sc";
+    $sql.= " ON s.rowid = sc.fk_soc";
+    $sql.= " AND sc.fk_user = ".$user->id;
+}
+$sql.= " ON sts.socid = s.rowid";
+$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+$sql.= " GROUP BY st.numero";
 $result = $db->query($sql);
 if ($result)
 {
     while ($objp = $db->fetch_object($result))
     {
-        $found=0;
-        if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS) && ($objp->client == 1 || $objp->client == 3)) { $found=1; $third['customer']++; }
-        if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS_STATS) && ($objp->client == 2 || $objp->client == 3)) { $found=1; $third['prospect']++; }
-        if (! empty($conf->fournisseur->enabled) && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS) && $objp->fournisseur) { $found=1; $third['supplier']++; }
-        if (! empty($conf->societe->enabled) && $objp->client == 0 && $objp->fournisseur == 0) { $found=1; $third['other']++; }
-        if ($found) $total++;
+        $third[$objp->type]['count'] = $objp->nbr;
     }
+    $sql = "SELECT s.rowid FROM ".MAIN_DB_PREFIX."societe AS s, ".MAIN_DB_PREFIX."societe_types_societe AS sts, ".MAIN_DB_PREFIX."societe_commerciaux AS sc";
+    $sql.= " WHERE";
+    $sql.= " s.rowid = sts.socid";
+    $sql.= " AND sts.typid IN (";
+    foreach ($customtypes->types_numero as $key => $num) {
+        if (!in_array($key, array('fournisseur', 'client', 'prospect'))) {
+            if ($user->rights->societe->$key->view ) $sql.= $num.", ";
+        }
+    }
+    if (!empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS)) $sql.= "1, ";
+    if (!empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS_STATS)) $sql.= "2, ";
+    if (!empty($conf->fournisseur->enabled) && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS)) $sql.= "3, ";
+    $sql.= "-1)";
+    if (! $user->rights->societe->client->voir) {
+        $sql.= " AND s.rowid = sc.fk_soc";
+        $sql.= " AND sc.fk_user = ".$user->id;
+    }
+    $sql.= " GROUP BY s.rowid";
+    $resql = $db->query($sql);
+    if ($resql) $total = $db->num_rows($resql);
+    else dol_print_error($db);
 }
 else dol_print_error($db);
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("Statistics").'</th></tr>';
-if (! empty($conf->use_javascript_ajax) && ((round($third['prospect'])?1:0)+(round($third['customer'])?1:0)+(round($third['supplier'])?1:0)+(round($third['other'])?1:0) >= 2))
+if (! empty($conf->use_javascript_ajax) && ((round($third['prospect']['count'])?1:0)+(round($third['client']['count'])?1:0)+(round($third['fournisseur']['count'])?1:0)+(round($third['aucun']['count'])?1:0) >= 2))
 {
     print '<tr><td align="center">';
     $dataseries=array();
-    if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS_STATS))     $dataseries[]=array('label'=>$langs->trans("Prospects"),'data'=>round($third['prospect']));
-    if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS))     $dataseries[]=array('label'=>$langs->trans("Customers"),'data'=>round($third['customer']));
-    if (! empty($conf->fournisseur->enabled) && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS)) $dataseries[]=array('label'=>$langs->trans("Suppliers"),'data'=>round($third['supplier']));
-    if (! empty($conf->societe->enabled))                                                              $dataseries[]=array('label'=>$langs->trans("Others"),'data'=>round($third['other']));
+    if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS_STATS))     $dataseries[]=array('label'=>$langs->trans("Prospects"),'data'=>round($third['prospect']['count']));
+    if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS))     $dataseries[]=array('label'=>$langs->trans("Customers"),'data'=>round($third['client']['count']));
+    if (! empty($conf->fournisseur->enabled) && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS)) $dataseries[]=array('label'=>$langs->trans("Suppliers"),'data'=>round($third['fournisseur']['count']));
+    foreach ($third as $key => $val) {
+        if (!in_array($key, array('aucun', 'fournisseur', 'client', 'prospect')))
+            if ($user->rights->societe->$key->view) $dataseries[]=array('label'=>$val['label'], 'data'=>round($val['count']));
+    }
+
+    if (! empty($conf->societe->enabled))                                                              $dataseries[]=array('label'=>$langs->trans("Others"),'data'=>round($third['aucun']['count']));
     $data=array('series'=>$dataseries);
     dol_print_graph('stats',300,180,$data,1,'pie',0);
     print '</td></tr>';
 }
 else
 {
-    if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS_STATS))
-    {
-        $statstring = "<tr $bc[0]>";
-        $statstring.= '<td><a href="'.DOL_URL_ROOT.'/comm/prospect/list.php">'.$langs->trans("Prospects").'</a></td><td align="right">'.round($third['prospect']).'</td>';
-        $statstring.= "</tr>";
+    $var = false;
+    foreach ($third as $key => $val) {
+        if (!in_array($key, array('client','prospect','fournisseur'))) {
+            if ($user->rights->societe->$key->view) {
+                print "<tr $bc[$var]>";
+                print '<td><a href="'.DOL_URL_ROOT.'/societe/societe.php?search_type='.$key.'">'.$val['label'].'</a></td><td align="right">'.round($val['count']).'</td>';
+                print '</tr>';
+                $var = !$var;
+            }
+        } else {
+            if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS_STATS) && $key == 'prospect')
+            {
+                print "<tr $bc[$var]>";
+                print '<td><a href="'.DOL_URL_ROOT.'/comm/prospect/list.php">'.$langs->trans("Prospects").'</a></td><td align="right">'.round($third['prospect']['count']).'</td>';
+                print "</tr>";
+                $var = !$var;
+            }
+            if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS) && $key == 'client')
+            {
+                print "<tr $bc[$var]>";
+                print '<td><a href="'.DOL_URL_ROOT.'/comm/list.php">'.$langs->trans("Customers").'</a></td><td align="right">'.round($third['client']['count']).'</td>';
+                print "</tr>";
+                $var = !$var;
+            }
+            if (! empty($conf->fournisseur->enabled) && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS) && $key == 'fournisseur')
+            {
+                print "<tr $bc[$var]>";
+                print '<td><a href="'.DOL_URL_ROOT.'/fourn/liste.php">'.$langs->trans("Suppliers").'</a></td><td align="right">'.round($third['fournisseur']['count']).'</td>';
+                print "</tr>";
+                $var = !$var;
+            }
+        }
     }
-    if (! empty($conf->societe->enabled) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS))
-    {
-        $statstring.= "<tr $bc[1]>";
-        $statstring.= '<td><a href="'.DOL_URL_ROOT.'/comm/list.php">'.$langs->trans("Customers").'</a></td><td align="right">'.round($third['customer']).'</td>';
-        $statstring.= "</tr>";
-    }
-    if (! empty($conf->fournisseur->enabled) && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS))
-    {
-        $statstring2 = "<tr $bc[0]>";
-        $statstring2.= '<td><a href="'.DOL_URL_ROOT.'/fourn/liste.php">'.$langs->trans("Suppliers").'</a></td><td align="right">'.round($third['supplier']).'</td>';
-        $statstring2.= "</tr>";
-    }
-    print $statstring;
-    print $statstring2;
 }
 print '<tr class="liste_total"><td>'.$langs->trans("UniqueThirdParties").'</td><td align="right">';
 print $total;
@@ -244,22 +260,13 @@ if ($result)
             print "</td>\n";
             // Type
             print '<td align="center">';
-            if ($thirdparty_static->client==1 || $thirdparty_static->client==3)
-            {
-            	$thirdparty_static->name=$langs->trans("Customer");
-            	print $thirdparty_static->getNomUrl(0,'customer');
-            }
-            if ($thirdparty_static->client == 3 && empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print " / ";
-            if (($thirdparty_static->client==2 || $thirdparty_static->client==3) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS))
-            {
-            	$thirdparty_static->name=$langs->trans("Prospect");
-            	print $thirdparty_static->getNomUrl(0,'prospect');
-            }
-            if (! empty($conf->fournisseur->enabled) && $thirdparty_static->fournisseur)
-            {
-                if ($thirdparty_static->client) print " / ";
-            	$thirdparty_static->name=$langs->trans("Supplier");
-            	print $thirdparty_static->getNomUrl(0,'supplier');
+            $types = $customtypes->getTypes($thirdparty_static->id);
+            $nbr = count($types);
+            foreach ($types as $type) {
+                $thirdparty_static->name = $customtypes->types_label[$type];
+                print $thirdparty_static->getNomUrl(0, $type);
+                $nbr--;
+                if ($nbr != 0) print " / ";
             }
             print '</td>';
             // Last modified date
