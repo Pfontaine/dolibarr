@@ -603,6 +603,8 @@ class ThirdPartiesTypes
      * @param   string  $rightstype     'view' or 'create'
      * @param   bool    $selecthtml     return a select html code
      * @param   bool    $multiple       allow multiple selection in select
+     * @param   array   $preselect      array of preselected types in select
+     * @param   string  $nameselect     name of select element
      * @return  array|int|string        return array of types if selecthtml = false
      *                                  return html code if selecthtml = true
      *                                  return 0 if error
@@ -733,7 +735,6 @@ class ThirdPartiesTypes
         $menu->fk_mainmenu = 'companies';
         $menu->fk_leftmenu = 'thirdparties';
         $menu->position = $this->types_position[$name];
-        // todo ici pour le lien vers le listing
         $menu->url = '/societe/societe.php?search_type='.$this->types_numero[$name];
         $menu->titre = $langs->transnoentities("List")." ".strtolower($this->types_label[$name]);
         $menu->perms = '$user->rights->societe->'.$name.'->view';

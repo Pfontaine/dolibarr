@@ -2946,6 +2946,13 @@ class Societe extends CommonObject
 
 	}
 
+    /**
+     * Convert client & fournisseur to types
+     *
+     * @param   int     $client         client
+     * @param   int     $fournisseur    founisseur
+     * @return  array                   types
+     */
     function clientfourniseur2types($client, $fournisseur)
     {
         if ($client == 0 && $fournisseur == 0)
@@ -2963,6 +2970,12 @@ class Societe extends CommonObject
         return $types;
     }
 
+    /**
+     * Convert types to client & fournisseur
+     *
+     * @param   array   $types          types
+     * @return  array                   client & fournisseur in array['client'] & array['fournisseur']
+     */
     function types2clientfournisseur($types)
     {
         if (in_array('aucun', $types))

@@ -123,7 +123,6 @@ if ($mode == 'search')
     {
         $sql .= " AND cs.fk_categorie = ".$search_categ;
     }
-    // todo peter modifier ici la recherche sts
     // Filter on type of thirdparty
 //	if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
 //	if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
@@ -196,7 +195,6 @@ if ($socname)
  */
 $title=$langs->trans("ListOfThirdParties");
 
-// todo peter modifier la requete sql ici
 $sql = "SELECT s.rowid, s.nom as name, s.barcode, s.town, s.datec, s.datea,";
 $sql.= " st.libelle as stcomm, s.prefix_comm, s.client, s.fournisseur, s.canvas, s.status as status,";
 $sql.= " s.siren as idprof1, s.siret as idprof2, ape as idprof3, idprof4 as idprof4";
@@ -260,7 +258,6 @@ if ($search_idprof4) $sql .= " AND s.idprof4 LIKE '%".$db->escape($search_idprof
 if ($search_idprof5) $sql .= " AND s.idprof5 LIKE '%".$db->escape($search_idprof5)."%'";
 if ($search_idprof6) $sql .= " AND s.idprof6 LIKE '%".$db->escape($search_idprof6)."%'";
 // Filter on type of thirdparty
-// todo peter modifier ici la recherche
 //if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
 //if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
 //if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
