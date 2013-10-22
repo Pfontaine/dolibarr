@@ -263,6 +263,7 @@ if ($result)
             $types = $customtypes->getTypes($thirdparty_static->id);
             $nbr = count($types);
             foreach ($types as $type) {
+                // todo ajouter prise en charge langue
                 $thirdparty_static->name = $customtypes->types_label[$type];
                 print $thirdparty_static->getNomUrl(0, $type);
                 $nbr--;

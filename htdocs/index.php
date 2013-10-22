@@ -128,6 +128,7 @@ if (empty($user->societe_id))
 
     if (empty($reshook))
     {
+        //todo trouver un moyen d'afficher les types personnalisés
 	    // Condition to be checked for each display line dashboard
 	    $conditions=array(
 	    ! empty($conf->societe->enabled) && $user->rights->societe->lire && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS),

@@ -28,6 +28,7 @@
 require_once '../main.inc.php';
 include_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+include_once DOL_DOCUMENT_ROOT.'/societe/class/thirdpartiestypes.class.php';
 
 $langs->load("companies");
 $langs->load("customers");
@@ -66,6 +67,8 @@ $offset = $conf->liste_limit * $page ;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 
+$customtypes = new ThirdPartiesTypes($db);
+$customtypes->fetch();
 
 /*
  * Actions
@@ -81,6 +84,7 @@ if ($mode == 'search')
 	if ($search_sale || (!$user->rights->societe->client->voir && !$socid)) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
     // We'll need this table joined to the select in order to filter by categ
     if ($search_categ) $sql.= ", ".MAIN_DB_PREFIX."categorie_societe as cs";
+    if ($search_type >= 0 && $search_type != '') $sql.= ", ".MAIN_DB_PREFIX."societe_types_societe as sts";
     $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
 
         // For natural search
@@ -119,11 +123,15 @@ if ($mode == 'search')
     {
         $sql .= " AND cs.fk_categorie = ".$search_categ;
     }
-    // todo peter modifier ici la recherche
+    // todo peter modifier ici la recherche sts
     // Filter on type of thirdparty
-	if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
-	if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
-	if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
+//	if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
+//	if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
+//	if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
+    if ($search_type >= 0 && $search_type != '') {
+        $sql.= " AND sts.socid = s.rowid";
+        $sql.= " AND sts.typid = ".$search_type;
+    }
 
 	$result=$db->query($sql);
 	if ($result)
@@ -202,6 +210,7 @@ $sql.= " ".MAIN_DB_PREFIX."c_stcomm as st";
 if ($search_sale || (!$user->rights->societe->client->voir && !$socid)) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 // We'll need this table joined to the select in order to filter by categ
 if ($search_categ) $sql.= ", ".MAIN_DB_PREFIX."categorie_societe as cs";
+if ($search_type >= 0 && $search_type != '') $sql.= ", ".MAIN_DB_PREFIX."societe_types_societe as sts";
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 if (! $user->rights->societe->client->voir && ! $socid)	$sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
@@ -252,9 +261,13 @@ if ($search_idprof5) $sql .= " AND s.idprof5 LIKE '%".$db->escape($search_idprof
 if ($search_idprof6) $sql .= " AND s.idprof6 LIKE '%".$db->escape($search_idprof6)."%'";
 // Filter on type of thirdparty
 // todo peter modifier ici la recherche
-if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
-if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
-if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
+//if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
+//if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
+//if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
+if ($search_type >= 0 && $search_type != '') {
+    $sql.= " AND sts.socid = s.rowid";
+    $sql.= " AND sts.typid = ".$search_type;
+}
 if (!empty($conf->barcode->enabled) && $sbarcode) $sql.= " AND s.barcode LIKE '%".$db->escape($sbarcode)."%'";
 //print $sql;
 
@@ -382,14 +395,19 @@ if ($resql)
 	print '</td>';
 	// Type (customer/prospect/supplier)
 	print '<td class="liste_titre" align="middle">';
-	print '<select class="flat" name="search_type">';
-	print '<option value="-1"'.($search_type==''?' selected="selected"':'').'>&nbsp;</option>';
-	if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1,3"'.($search_type=='1,3'?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
-	if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2,3"'.($search_type=='2,3'?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
-	//if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="3"'.($search_type=='3'?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
-	print '<option value="4"'.($search_type=='4'?' selected="selected"':'').'>'.$langs->trans('Supplier').'</option>';
-	print '<option value="0"'.($search_type=='0'?' selected="selected"':'').'>'.$langs->trans('Others').'</option>';
-	print '</select></td>';
+//	print '<select class="flat" name="search_type">';
+//	print '<option value="-1"'.($search_type==''?' selected="selected"':'').'>&nbsp;</option>';
+//	if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1,3"'.($search_type=='1,3'?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
+//	if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2,3"'.($search_type=='2,3'?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
+//	//if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="3"'.($search_type=='3'?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
+//	print '<option value="4"'.($search_type=='4'?' selected="selected"':'').'>'.$langs->trans('Supplier').'</option>';
+//	print '<option value="0"'.($search_type=='0'?' selected="selected"':'').'>'.$langs->trans('Others').'</option>';
+//	print '</select></td>';
+    if ($search_type >= 0 && $search_type != '')
+        $preselect = $customtypes->getTypesFromNumeros($search_type);
+    else
+        $preselect[] = 'aucun';
+    print $customtypes->getAllowedTypes($user, 'view', true, false, $preselect);
 	// Status
 	print '<td class="liste_titre" align="right">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
@@ -424,26 +442,34 @@ if ($resql)
 		print "<td>".$obj->idprof3."</td>\n";
 		print "<td>".$obj->idprof4."</td>\n";
 		print '<td align="center">';
-		$s='';
-        // todo peter ajouter les nom de types ici
-		if (($obj->client==1 || $obj->client==3) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS))
-		{
-	  		$companystatic->name=$langs->trans("Customer");
-		    $s.=$companystatic->getNomUrl(0,'customer');
-		}
-		if (($obj->client==2 || $obj->client==3) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS))
-		{
-            if ($s) $s.=" / ";
-		    $companystatic->name=$langs->trans("Prospect");
-            $s.=$companystatic->getNomUrl(0,'prospect');
-		}
-		if (! empty($conf->fournisseur->enabled) && $obj->fournisseur)
-		{
-			if ($s) $s.=" / ";
-            $companystatic->name=$langs->trans("Supplier");
-            $s.=$companystatic->getNomUrl(0,'supplier');
-		}
-		print $s;
+//		$s='';
+//		if (($obj->client==1 || $obj->client==3) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS))
+//		{
+//	  		$companystatic->name=$langs->trans("Customer");
+//		    $s.=$companystatic->getNomUrl(0,'customer');
+//		}
+//		if (($obj->client==2 || $obj->client==3) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS))
+//		{
+//            if ($s) $s.=" / ";
+//		    $companystatic->name=$langs->trans("Prospect");
+//            $s.=$companystatic->getNomUrl(0,'prospect');
+//		}
+//		if (! empty($conf->fournisseur->enabled) && $obj->fournisseur)
+//		{
+//			if ($s) $s.=" / ";
+//            $companystatic->name=$langs->trans("Supplier");
+//            $s.=$companystatic->getNomUrl(0,'supplier');
+//		}
+//		print $s;
+        $types = $customtypes->getTypes($companystatic->id);
+        $nbr = count($types);
+        foreach ($types as $type) {
+            // todo ajouter prise en charge langue
+            $companystatic->name = $customtypes->types_label[$type];
+            print $companystatic->getNomUrl(0, $type);
+            $nbr--;
+            if ($nbr != 0) print " / ";
+        }
 		print '</td>';
         print '<td align="right">'.$companystatic->getLibStatut(3).'</td>';
 

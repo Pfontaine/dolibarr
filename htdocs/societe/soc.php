@@ -37,6 +37,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/thirdpartiestypes.class.php';
 if (! empty($conf->adherent->enabled)) require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 
 $langs->load("companies");
@@ -76,6 +77,8 @@ $result = restrictedArea($user, 'societe', $socid, '&societe', '', 'fk_soc', 'ro
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('thirdpartycard'));
 
+$customtypes = new ThirdPartiesTypes($db);
+$customtypes->fetch();
 
 /*
  * Actions
@@ -168,6 +171,15 @@ if (empty($reshook))
 
         $object->client                = GETPOST('client');
         $object->fournisseur           = GETPOST('fournisseur');
+
+        $object->types                 = $customtypes->getTypesFromNumeros(GETPOST('types_selected'));
+
+        if ($object->client == '' || $object->fournisseur == '')
+        {
+            $cf = $object->types2clientfournisseur($object->types);
+            $object->client = $cf['client'];
+            $object->fournisseur = $cf['fournisseur'];
+        }
 
         $object->commercial_id         = GETPOST('commercial_id');
         $object->default_lang          = GETPOST('default_lang');
@@ -587,6 +599,12 @@ else
         if (GETPOST("type")=='c')  { $object->client=1; }
         if (GETPOST("type")=='p')  { $object->client=2; }
         if (! empty($conf->fournisseur->enabled) && (GETPOST("type")=='f' || GETPOST("type")==''))  { $object->fournisseur=1; }
+        if ($type != '')
+            $preselected_types = $customtypes->getTypesFromNumeros(GETPOST('type'));
+        else
+            $preselected_types[] = 'aucun';
+        //var_dump($preselected_types);
+        $object->types              = $preselected_types;
 
         $object->name				= GETPOST('nom');
         $object->firstname			= GETPOST('firstname');
@@ -764,47 +782,88 @@ else
             print '<td colspan=2>&nbsp;</td></tr>';
         }
 
-        // Prospect/Customer
-        print '<tr><td width="25%"><span class="fieldrequired">'.$langs->trans('ProspectCustomer').'</span></td><td width="25%"><select class="flat" name="client">';
-        $selected=isset($_POST['client'])?GETPOST('client'):$object->client;
-        if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2"'.($selected==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
-        if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="3"'.($selected==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
-        if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1"'.($selected==1?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
-        print '<option value="0"'.($selected==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
-        print '</select></td>';
-        // todo peter remplacer cette partie
+//        // Prospect/Customer
+//        print '<tr><td width="25%"><span class="fieldrequired">'.$langs->trans('ProspectCustomer').'</span></td><td width="25%"><select class="flat" name="client">';
+//        $selected=isset($_POST['client'])?GETPOST('client'):$object->client;
+//        if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2"'.($selected==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
+//        if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="3"'.($selected==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
+//        if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1"'.($selected==1?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
+//        print '<option value="0"'.($selected==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
+//        print '</select></td>';
+//
+//        print '<td width="25%">'.$langs->trans('CustomerCode').'</td><td width="25%">';
+//        print '<table class="nobordernopadding"><tr><td>';
+//        $tmpcode=$object->code_client;
+//        if ($modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object,0);
+//        print '<input type="text" name="code_client" size="16" value="'.$tmpcode.'" maxlength="15">';
+//        print '</td><td>';
+//        $s=$modCodeClient->getToolTip($langs,$object,0);
+//        print $form->textwithpicto('',$s,1);
+//        print '</td></tr></table>';
+//
+//        print '</td></tr>';
+//
+//        if (! empty($conf->fournisseur->enabled) && ! empty($user->rights->fournisseur->lire))
+//        {
+//            // Supplier
+//            print '<tr>';
+//            print '<td><span class="fieldrequired">'.$langs->trans('Supplier').'</span></td><td>';
+//            print $form->selectyesno("fournisseur",(isset($_POST['fournisseur'])?GETPOST('fournisseur'):$object->fournisseur),1);
+//            print '</td>';
+//            print '<td>'.$langs->trans('SupplierCode').'</td><td>';
+//            print '<table class="nobordernopadding"><tr><td>';
+//            $tmpcode=$object->code_fournisseur;
+//            if ($modCodeFournisseur->code_auto) $tmpcode=$modCodeFournisseur->getNextValue($object,1);
+//            print '<input type="text" name="code_fournisseur" size="16" value="'.$tmpcode.'" maxlength="15">';
+//            print '</td><td>';
+//            $s=$modCodeFournisseur->getToolTip($langs,$object,1);
+//            print $form->textwithpicto('',$s,1);
+//            print '</td></tr></table>';
+//            print '</td></tr>';
+//        }
 
-        print '<td width="25%">'.$langs->trans('CustomerCode').'</td><td width="25%">';
-        print '<table class="nobordernopadding"><tr><td>';
-        $tmpcode=$object->code_client;
-        if ($modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object,0);
-        print '<input type="text" name="code_client" size="16" value="'.$tmpcode.'" maxlength="15">';
-        print '</td><td>';
-        $s=$modCodeClient->getToolTip($langs,$object,0);
-        print $form->textwithpicto('',$s,1);
-        print '</td></tr></table>';
-
-        print '</td></tr>';
-
-        if (! empty($conf->fournisseur->enabled) && ! empty($user->rights->fournisseur->lire))
-        {
-            // todo peter n'est plus nécessaire, trouver un moyen de gérer le code fournisseur
-            // Supplier
-            print '<tr>';
-            print '<td><span class="fieldrequired">'.$langs->trans('Supplier').'</span></td><td>';
-            print $form->selectyesno("fournisseur",(isset($_POST['fournisseur'])?GETPOST('fournisseur'):$object->fournisseur),1);
-            print '</td>';
-            print '<td>'.$langs->trans('SupplierCode').'</td><td>';
-            print '<table class="nobordernopadding"><tr><td>';
-            $tmpcode=$object->code_fournisseur;
-            if ($modCodeFournisseur->code_auto) $tmpcode=$modCodeFournisseur->getNextValue($object,1);
-            print '<input type="text" name="code_fournisseur" size="16" value="'.$tmpcode.'" maxlength="15">';
-            print '</td><td>';
-            $s=$modCodeFournisseur->getToolTip($langs,$object,1);
+        // Type
+        print '<tr>';
+        print '<td width="25%"><span class="fieldrequired">'.$langs->trans('ThirdPartyType').'</span></td>';
+        print '<td width="25%">';
+        if ($conf->global->SOCIETE_MULTIPLE_TYPES) {
+            print $customtypes->getAllowedTypes($user, 'create', true, true, $preselected_types, 'types_selected');
+        } else {
+            print $customtypes->getAllowedTypes($user, 'create', true, false, $preselected_types, 'types_selected');
+        }
+        print '</td>';
+        if (!$conf->fournisseur->enabled) {
+            print '<td width="50%" colspan="2">';
+            $tmpcode=$object->code_client;
+            if ($modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object, 0);
+            print '<table class="nobordernopadding" width="100%"><tr>';
+            print '<td width=50%>'.$langs->trans('CustomerCode').'</td><td>';
+            print '<input type="text" name="code_client" size="16" value"'.$tmpcode.'" maxlength"15"></td><td align="left">';
+            $s=$modCodeClient->getToolTip($langs,$object,0);
             print $form->textwithpicto('',$s,1);
             print '</td></tr></table>';
+            print '</td>';
+        } else {
+            print '<td width="50%" colspan="2">';
+            print '<table class="nobordernopadding" width="100%"><tr>';
+            print '<td width=50%>'.$langs->trans('CustomerCode').'</td><td>';
+            $tmpcode=$object->code_client;
+            if ($modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object, 0);
+            print '<input type="text" name="code_client" size="16" value"'.$tmpcode.'" maxlength"15"></td><td align="left">';
+            $s=$modCodeClient->getToolTip($langs,$object,0);
+            print $form->textwithpicto('',$s,1);
             print '</td></tr>';
+            print '<td width=50%>'.$langs->trans('SupplierCode').'</td><td>';
+            $tmpcode=$object->code_fournisseur;
+            if ($modCodeFournisseur->code_auto) $tmpcode=$modCodeFournisseur->getNextValue($object, 0);
+            print '<input type="text" name="code_fournisseur" size="16" value"'.$tmpcode.'" maxlength"15"></td><td align="left">';
+            $s=$modCodeFournisseur->getToolTip($langs,$object,1);
+            print $form->textwithpicto('',$s,1);
+            print '</td></tr>';
+            print '</table>';
+            print '</td>';
         }
+        print '</tr>';
 
         // Status
         print '<tr><td>'.$langs->trans('Status').'</td><td colspan="3">';
@@ -1078,6 +1137,7 @@ else
                 $object->code_client			= GETPOST('code_client');
                 $object->fournisseur			= GETPOST('fournisseur');
                 $object->code_fournisseur		= GETPOST('code_fournisseur');
+                $object->types                  = $customtypes->getTypesFromNumeros(GETPOST('types_selected'));
                 $object->address				= GETPOST('address');
                 $object->zip					= GETPOST('zipcode');
                 $object->town					= GETPOST('town');
@@ -1119,6 +1179,8 @@ else
 
             dol_htmloutput_errors($error,$errors);
 
+            $preselected_types = $object->types;
+
             if ($conf->use_javascript_ajax)
             {
                 print "\n".'<script type="text/javascript" language="javascript">';
@@ -1159,50 +1221,127 @@ else
                 print '</td>';
             }
 
-            // Prospect/Customer
-            // todo peter remplacer ici
-            print '<tr><td width="25%"><span class="fieldrequired">'.$langs->trans('ProspectCustomer').'</span></td><td width="25%"><select class="flat" name="client">';
-            if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2"'.($object->client==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
-            if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="3"'.($object->client==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
-            if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1"'.($object->client==1?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
-            print '<option value="0"'.($object->client==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
-            print '</select></td>';
-            print '<td width="25%">'.$langs->trans('CustomerCode').'</td><td width="25%">';
+//            // Prospect/Customer
+//            print '<tr><td width="25%"><span class="fieldrequired">'.$langs->trans('ProspectCustomer').'</span></td><td width="25%"><select class="flat" name="client">';
+//            if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2"'.($object->client==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
+//            if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="3"'.($object->client==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
+//            if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1"'.($object->client==1?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
+//            print '<option value="0"'.($object->client==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
+//            print '</select></td>';
+//            print '<td width="25%">'.$langs->trans('CustomerCode').'</td><td width="25%">';
+//
+//            print '<table class="nobordernopadding"><tr><td>';
+//            if ((!$object->code_client || $object->code_client == -1) && $modCodeClient->code_auto)
+//            {
+//                $tmpcode=$object->code_client;
+//                if (empty($tmpcode) && $modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object,0);
+//                print '<input type="text" name="code_client" size="16" value="'.$tmpcode.'" maxlength="15">';
+//            }
+//            else if ($object->codeclient_modifiable())
+//            {
+//                print '<input type="text" name="code_client" size="16" value="'.$object->code_client.'" maxlength="15">';
+//            }
+//            else
+//            {
+//                print $object->code_client;
+//                print '<input type="hidden" name="code_client" value="'.$object->code_client.'">';
+//            }
+//            print '</td><td>';
+//            $s=$modCodeClient->getToolTip($langs,$object,0);
+//            print $form->textwithpicto('',$s,1);
+//            print '</td></tr></table>';
+//
+//            print '</td></tr>';
+//
+//            // Supplier
+//            if (! empty($conf->fournisseur->enabled) && ! empty($user->rights->fournisseur->lire))
+//            {
+//                print '<tr>';
+//                print '<td><span class="fieldrequired">'.$langs->trans('Supplier').'</span></td><td>';
+//                print $form->selectyesno("fournisseur",$object->fournisseur,1);
+//                print '</td>';
+//                print '<td>'.$langs->trans('SupplierCode').'</td><td>';
+//
+//                print '<table class="nobordernopadding"><tr><td>';
+//                if ((!$object->code_fournisseur || $object->code_fournisseur == -1) && $modCodeFournisseur->code_auto)
+//                {
+//                    $tmpcode=$object->code_fournisseur;
+//                    if (empty($tmpcode) && $modCodeFournisseur->code_auto) $tmpcode=$modCodeFournisseur->getNextValue($object,1);
+//                    print '<input type="text" name="code_fournisseur" size="16" value="'.$tmpcode.'" maxlength="15">';
+//                }
+//                else if ($object->codefournisseur_modifiable())
+//                {
+//                    print '<input type="text" name="code_fournisseur" size="16" value="'.$object->code_fournisseur.'" maxlength="15">';
+//                }
+//                else
+//              {
+//                    print $object->code_fournisseur;
+//                    print '<input type="hidden" name="code_fournisseur" value="'.$object->code_fournisseur.'">';
+//                }
+//                print '</td><td>';
+//                $s=$modCodeFournisseur->getToolTip($langs,$object,1);
+//                print $form->textwithpicto('',$s,1);
+//                print '</td></tr></table>';
+//
+//                print '</td></tr>';
+//            }
 
-            print '<table class="nobordernopadding"><tr><td>';
-            if ((!$object->code_client || $object->code_client == -1) && $modCodeClient->code_auto)
-            {
-                $tmpcode=$object->code_client;
-                if (empty($tmpcode) && $modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object,0);
-                print '<input type="text" name="code_client" size="16" value="'.$tmpcode.'" maxlength="15">';
+            // Type
+            print '<tr>';
+            print '<td width="25%"><span class="fieldrequired">'.$langs->trans('ThirdPartyType').'</span></td>';
+            print '<td width="25%">';
+            if ($conf->global->SOCIETE_MULTIPLE_TYPES) {
+                print $customtypes->getAllowedTypes($user, 'create', true, true, $preselected_types, 'types_selected');
+            } else {
+                print $customtypes->getAllowedTypes($user, 'create', true, false, $preselected_types, 'types_selected');
             }
-            else if ($object->codeclient_modifiable())
-            {
-                print '<input type="text" name="code_client" size="16" value="'.$object->code_client.'" maxlength="15">';
-            }
-            else
-            {
-                print $object->code_client;
-                print '<input type="hidden" name="code_client" value="'.$object->code_client.'">';
-            }
-            print '</td><td>';
-            $s=$modCodeClient->getToolTip($langs,$object,0);
-            print $form->textwithpicto('',$s,1);
-            print '</td></tr></table>';
-
-            print '</td></tr>';
-
-            // Supplier
-            // todo peter, voir comment supprimer ici
-            if (! empty($conf->fournisseur->enabled) && ! empty($user->rights->fournisseur->lire))
-            {
-                print '<tr>';
-                print '<td><span class="fieldrequired">'.$langs->trans('Supplier').'</span></td><td>';
-                print $form->selectyesno("fournisseur",$object->fournisseur,1);
+            print '</td>';
+            if (!$conf->fournisseur->enabled) {
+                print '<td width="50%" colspan="2">';
+                print '<table class="nobordernopadding" width="100%"><tr>';
+                print '<td width=50%>'.$langs->trans('CustomerCode').'</td><td>';
+                if ((!$object->code_client || $object->code_client == -1) && $modCodeClient->code_auto)
+                {
+                    $tmpcode=$object->code_client;
+                    if (empty($tmpcode) && $modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object,0);
+                    print '<input type="text" name="code_client" size="16" value="'.$tmpcode.'" maxlength="15">';
+                }
+                else if ($object->codeclient_modifiable())
+                {
+                    print '<input type="text" name="code_client" size="16" value="'.$object->code_client.'" maxlength="15">';
+                }
+                else
+                {
+                    print $object->code_client;
+                    print '<input type="hidden" name="code_client" value="'.$object->code_client.'">';
+                }
+                $s=$modCodeClient->getToolTip($langs,$object,0);
+                print $form->textwithpicto('',$s,1);
+                print '</td></tr></table>';
                 print '</td>';
-                print '<td>'.$langs->trans('SupplierCode').'</td><td>';
-
-                print '<table class="nobordernopadding"><tr><td>';
+            } else {
+                print '<td width="50%" colspan="2">';
+                print '<table class="nobordernopadding" width="100%"><tr>';
+                print '<td width=50%>'.$langs->trans('CustomerCode').'</td><td>';
+                if ((!$object->code_client || $object->code_client == -1) && $modCodeClient->code_auto)
+                {
+                    $tmpcode=$object->code_client;
+                    if (empty($tmpcode) && $modCodeClient->code_auto) $tmpcode=$modCodeClient->getNextValue($object,0);
+                    print '<input type="text" name="code_client" size="16" value="'.$tmpcode.'" maxlength="15">';
+                }
+                else if ($object->codeclient_modifiable())
+                {
+                    print '<input type="text" name="code_client" size="16" value="'.$object->code_client.'" maxlength="15">';
+                }
+                else
+                {
+                    print $object->code_client;
+                    print '<input type="hidden" name="code_client" value="'.$object->code_client.'">';
+                }
+                $s=$modCodeClient->getToolTip($langs,$object,0);
+                print $form->textwithpicto('',$s,1);
+                print '</td></tr>';
+                print '<td width=50%>'.$langs->trans('SupplierCode').'</td><td>';
                 if ((!$object->code_fournisseur || $object->code_fournisseur == -1) && $modCodeFournisseur->code_auto)
                 {
                     $tmpcode=$object->code_fournisseur;
@@ -1214,17 +1353,17 @@ else
                     print '<input type="text" name="code_fournisseur" size="16" value="'.$object->code_fournisseur.'" maxlength="15">';
                 }
                 else
-              {
+                {
                     print $object->code_fournisseur;
                     print '<input type="hidden" name="code_fournisseur" value="'.$object->code_fournisseur.'">';
                 }
-                print '</td><td>';
                 $s=$modCodeFournisseur->getToolTip($langs,$object,1);
                 print $form->textwithpicto('',$s,1);
-                print '</td></tr></table>';
-
                 print '</td></tr>';
+                print '</table>';
+                print '</td>';
             }
+            print '</tr>';
 
             // Barcode
             if (! empty($conf->barcode->enabled))

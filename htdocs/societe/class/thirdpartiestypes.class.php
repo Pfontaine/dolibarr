@@ -596,6 +596,120 @@ class ThirdPartiesTypes
             return false;
     }
 
+    /**
+     * get allowed types for user
+     *
+     * @param   User    $user           User
+     * @param   string  $rightstype     'view' or 'create'
+     * @param   bool    $selecthtml     return a select html code
+     * @param   bool    $multiple       allow multiple selection in select
+     * @return  array|int|string        return array of types if selecthtml = false
+     *                                  return html code if selecthtml = true
+     *                                  return 0 if error
+     */
+    function getAllowedTypes($user, $rightstype = 'view', $selecthtml = false, $multiple = false, $preselect = array(), $nameselect= "search_type" )
+    {
+        global $conf;
+
+        if (!$this->fetched)
+            $this->fetch();
+
+        if (!in_array($rightstype, array('view','create'))) return 0;
+
+        $types = array('aucun');
+
+        if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) $types[] = 'client';
+        if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) $types[] = 'prospect';
+        if ($conf->fournisseur->enabled) $types[] = 'fournisseur';
+        foreach ($this->types_label as $key => $val)
+        {
+            if ($user->rights->societe->$key->$rightstype) {
+                $types[] = $key;
+            }
+        }
+        // todo add support of module types
+
+        if ($selecthtml) {
+            $html = '<select name="'.$nameselect.($multiple?'[]':'').'" class="flat" '.($multiple?'multiple=multiple':'').'>';
+            foreach ($types as $type) {
+                $html.= '<option value="'.$this->types_numero[$type].'" '.(in_array($type,$preselect)?'selected=selected':'').'>'.$this->types_label[$type].'</option>';
+            }
+            $html.= '</select>';
+
+            return $html;
+        }
+        else return $types;
+    }
+
+    /**
+     * get type from numero
+     *
+     * @param   int     $numero     numero
+     * @return  int|string          name of type if OK, 0 if KO
+     */
+    function getTypeFromNumero($numero)
+    {
+        if (!$this->fetched)
+            $this->fetch();
+
+        $name = '';
+
+        if (in_array($numero, array('f','c','p'))) {
+            switch($numero) {
+                case 'f':
+                    $name = 'fournisseur';
+                    break;
+                case 'c':
+                    $name = 'client';
+                    break;
+                case 'p':
+                    $name = 'prospect';
+                    break;
+                default:
+            }
+        }
+        else {
+            foreach($this->types_numero as $key => $val)
+            {
+                if ($val == $numero)
+                    $name = $key;
+            }
+        }
+
+        if ($name != '')
+            return $name;
+        else
+            return 0;
+    }
+
+    /**
+     * get types array from numeros
+     *
+     * @param   string|array    $numeros        list of numero (in array or comma separated)
+     * @return  array|int                       array of types names if OK, 0 if KO
+     */
+    function getTypesFromNumeros($numeros)
+    {
+        if (!$this->fetched)
+            $this->fetch();
+
+        if (!is_array($numeros))
+            $numeros = explode(',',$numeros);
+
+        $names = array();
+
+        foreach ($numeros as $numero)
+        {
+            if ($tmpname = $this->getTypeFromNumero($numero))
+                $names[] = $tmpname;
+        }
+
+        if (count($names))
+            return $names;
+        else
+            return 0;
+    }
+
     private function checkNumero($numero)
     {
         if ($numero < 1000000)
@@ -620,7 +734,7 @@ class ThirdPartiesTypes
         $menu->fk_leftmenu = 'thirdparties';
         $menu->position = $this->types_position[$name];
         // todo ici pour le lien vers le listing
-        $menu->url = '/societe/societe.php?search_type='.$name;
+        $menu->url = '/societe/societe.php?search_type='.$this->types_numero[$name];
         $menu->titre = $langs->transnoentities("List")." ".strtolower($this->types_label[$name]);
         $menu->perms = '$user->rights->societe->'.$name.'->view';
         $menu->enabled = '$user->rights->societe->'.$name.'->view';
@@ -639,7 +753,7 @@ class ThirdPartiesTypes
             $menu2->fk_mainmenu = 'companies';
             $menu2->fk_leftmenu = $name;
             $menu2->position = $this->types_position[$name];
-            $menu2->url = '/societe/soc.php?action=create&type='.$name;
+            $menu2->url = '/societe/soc.php?action=create&type='.$this->types_numero[$name];
             $menu2->titre = $langs->transnoentities("Add")." ".strtolower($this->types_label[$name]);
             $menu2->perms = '$user->rights->societe->'.$name.'->create';
             $menu2->enabled = '$user->rights->societe->'.$name.'->view';

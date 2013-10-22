@@ -2946,7 +2946,7 @@ class Societe extends CommonObject
 
 	}
 
-    private function clientfourniseur2types($client, $fournisseur)
+    function clientfourniseur2types($client, $fournisseur)
     {
         if ($client == 0 && $fournisseur == 0)
             $types[] = 'aucun';
@@ -2963,7 +2963,7 @@ class Societe extends CommonObject
         return $types;
     }
 
-    private function types2clientfournisseur($types)
+    function types2clientfournisseur($types)
     {
         if (in_array('aucun', $types))
             $ret = array('client'=>0, 'fournisseur'=>0);
