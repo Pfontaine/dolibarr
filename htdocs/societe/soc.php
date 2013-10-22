@@ -598,7 +598,7 @@ else
         if (GETPOST("type")=='c')  { $object->client=1; }
         if (GETPOST("type")=='p')  { $object->client=2; }
         if (! empty($conf->fournisseur->enabled) && (GETPOST("type")=='f' || GETPOST("type")==''))  { $object->fournisseur=1; }
-        if ($type != '')
+        if (GETPOST("type") != '')
             $preselected_types = $customtypes->getTypesFromNumeros(GETPOST('type'));
         else
             $preselected_types[] = 'aucun';
