@@ -35,6 +35,7 @@ class ThirdPartiesTypes
     var $types_numero;
     var $types_inmenu;
     var $types_menuid;
+    var $types_module;
 
     var $last_numero;
     var $last_position;
@@ -61,6 +62,7 @@ class ThirdPartiesTypes
         $this->types_numero = array();
         $this->types_inmenu = array();
         $this->types_menuid = array();
+        $this->types_module = array();
         $this->fetched = false;
     }
 
@@ -104,7 +106,7 @@ class ThirdPartiesTypes
 
         // Insert new societe type
         $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe_types(";
-        $sql.= " name, label, position, status, numero, entity)";
+        $sql.= " name, label, position, status, numero, entity, module)";
         $sql.= " VALUES (";
         $sql.= "'".$name."', ";
         $sql.= "'".$label."', ";
@@ -112,6 +114,7 @@ class ThirdPartiesTypes
         $sql.= "'".$status."', ";
         $sql.= "'".$numero."', ";
         $sql.= "'".$entity."')";
+        $sql.= "'".$modulename."')";
 
         // Insert rights
         if (!dol_strlen($modulename)) {
@@ -215,6 +218,7 @@ class ThirdPartiesTypes
                     $this->types_inmenu[$obj->name] = $obj->inmenu;
                     $this->types_menuid[$obj->name][0] = $obj->menuid1;
                     $this->types_menuid[$obj->name][1] = $obj->menuid2;
+                    $this->types_module[$obj->name] = $obj->module;
 
                     if ($obj->numero > $this->last_numero)
                         $this->last_numero = $obj->numero;
@@ -735,8 +739,13 @@ class ThirdPartiesTypes
 
         require_once DOL_DOCUMENT_ROOT.'/core/class/menubase.class.php';
 
+        if ($this->types_module[$name] == '')
+            $module = 'societe';
+        else
+            $module = $this->types_module[$name];
+
         $menu = new Menubase($this->db, 'all');
-        $menu->module = 'societe';
+        $menu->module = $module;
         $menu->type = 'left';
         $menu->mainmenu = 'companies';
         $menu->leftmenu = $name;
@@ -746,8 +755,8 @@ class ThirdPartiesTypes
         $menu->position = $this->types_position[$name];
         $menu->url = '/societe/societe.php?search_type='.$this->types_numero[$name];
         $menu->titre = $langs->transnoentities("List")." ".strtolower($this->types_label[$name]);
-        $menu->perms = '$user->rights->societe->'.$name.'->view';
-        $menu->enabled = '$user->rights->societe->'.$name.'->view';
+        $menu->perms = '$user->rights->'.$module.'->'.$name.'->view';
+        $menu->enabled = '$user->rights->'.$module.'->'.$name.'->view';
         $menu->user = 0;
 
         $idmenu = $menu->create($user);
@@ -755,7 +764,7 @@ class ThirdPartiesTypes
         if ($idmenu > 0) {
             $this->types_menuid[$name][0] = $idmenu;
             $menu2 = new Menubase($this->db, 'all');
-            $menu2->module = 'societe';
+            $menu2->module = $module;
             $menu2->type = 'left';
             $menu2->mainmenu = '';
             $menu2->leftmenu = '';
@@ -765,8 +774,8 @@ class ThirdPartiesTypes
             $menu2->position = $this->types_position[$name];
             $menu2->url = '/societe/soc.php?action=create&type='.$this->types_numero[$name];
             $menu2->titre = $langs->transnoentities("Add")." ".strtolower($this->types_label[$name]);
-            $menu2->perms = '$user->rights->societe->'.$name.'->create';
-            $menu2->enabled = '$user->rights->societe->'.$name.'->view';
+            $menu2->perms = '$user->rights->'.$module.'->'.$name.'->create';
+            $menu2->enabled = '$user->rights->'.$module.'->'.$name.'->view';
             $menu2->user = 0;
 
             $idmenu2 = $menu2->create($user);
