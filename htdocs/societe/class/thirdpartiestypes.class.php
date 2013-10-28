@@ -80,7 +80,9 @@ class ThirdPartiesTypes
         global $conf, $user;
         $entity=(! empty($force_entity) ? $force_entity : $conf->entity);
 
+        $name = $this->db->escape($name);
         $label = $this->db->escape($label);
+        $modulename = $this->db->escape($modulename);
 
         if (!$this->fetched)
             $this->fetch();
@@ -318,6 +320,9 @@ class ThirdPartiesTypes
     {
         $this->fetch();
 
+        $name = $this->db->escape($name);
+        $label = $this->db->escape($label);
+
         $sql = "UPDATE ".MAIN_DB_PREFIX."societe_types";
         $sql.= " SET";
         $sql.= " position = '".$position."',";
@@ -383,6 +388,8 @@ class ThirdPartiesTypes
     function delete($name)
     {
         $this->fetch();
+
+        $name = $this->db->escape($name);
 
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."societe_types";
         $sql.= " WHERE name = '".$name."'";
