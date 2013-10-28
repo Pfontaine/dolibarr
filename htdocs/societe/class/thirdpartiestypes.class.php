@@ -80,6 +80,8 @@ class ThirdPartiesTypes
         global $conf, $user;
         $entity=(! empty($force_entity) ? $force_entity : $conf->entity);
 
+        $label = $this->db->escape($label);
+
         if (!$this->fetched)
             $this->fetch();
 
@@ -178,7 +180,7 @@ class ThirdPartiesTypes
             return 1;
         } else {
             $this->db->rollback();
-            $this->error[] = "SQL error ".dol_print_error($this->db);
+            $this->error[] = "SQL error ".$sql;
             return -1;
         }
     }
