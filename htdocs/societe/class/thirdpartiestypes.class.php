@@ -639,7 +639,10 @@ class ThirdPartiesTypes
         if ($conf->fournisseur->enabled) $types[] = 'fournisseur';
         foreach ($this->types_label as $key => $val)
         {
-            if ($user->rights->societe->$key->$rightstype) {
+            $module = 'societe';
+            if ($this->types_module[$key] != '')
+                $module = $this->types_module[$key];
+            if ($user->rights->$module->$key->$rightstype) {
                 $types[] = $key;
             }
         }
