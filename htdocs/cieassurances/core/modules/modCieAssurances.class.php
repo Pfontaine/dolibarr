@@ -243,7 +243,7 @@ class modCieAssurances extends DolibarrModules
         require_once DOL_DOCUMENT_ROOT.'/societe/class/thirdpartiestypes.class.php';
         $customtypes = new ThirdPartiesTypes($this->db);
         $customtypes->fetch();
-        if ($customtypes->addCustomType('cieassurances','Campagnies d\'assurances', 10, 1, 120001, true, 'cieassurances') < 0) {
+        if ($customtypes->addCustomType('cieassurances','Campagnies', 10, 1, 120001, true, 'cieassurances') < 0) {
             $this->error = $customtypes->error;
             return 0;
         }
