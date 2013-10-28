@@ -27,6 +27,7 @@ CREATE TABLE llx_societe_types (
   position   INTEGER NOT NULL,
   status     TINYINT NOT NULL DEFAULT 1,
   entity     INTEGER NOT NULL DEFAULT 0,
+  module     varchar(255) NOT NULL DEFAULT '';
   inmenu     INTEGER NOT NULL DEFAULT 1,
   menuid1    INTEGER,
   menuid2    INTEGER

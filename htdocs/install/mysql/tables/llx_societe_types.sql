@@ -24,6 +24,7 @@ create table llx_societe_types (
   position   integer not null,
   status     tinyint not null default 1,
   entity     integer not null default 0,
+  module     varchar(255) NOT NULL DEFAULT '';
   inmenu     integer not null default 1,
   menuid1    integer,
   menuid2    integer
