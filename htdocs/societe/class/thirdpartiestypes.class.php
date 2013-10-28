@@ -113,7 +113,7 @@ class ThirdPartiesTypes
         $sql.= "'".$position."', ";
         $sql.= "'".$status."', ";
         $sql.= "'".$numero."', ";
-        $sql.= "'".$entity."')";
+        $sql.= "'".$entity."', ";
         $sql.= "'".$modulename."')";
 
         // Insert rights
