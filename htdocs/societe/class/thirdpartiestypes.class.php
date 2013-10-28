@@ -142,6 +142,7 @@ class ThirdPartiesTypes
             $this->types_status[$name] = $status;
             $this->types_numero[$name] = $numero;
             $this->types_label[$name] = $label;
+            $this->types_module[$name] = $modulename;
 
             $this->db->commit();
             // On ajoute les menus
