@@ -158,7 +158,9 @@ class Polices extends CommonObject
 
     public function delete($id)
     {
-        global $user;
+        global $user, $langs;
+
+        $langs->load("polices_error@ccpm");
 
         if (!$user->rights->ccpm_polices->polices->suppression) {
             $this->error++;
