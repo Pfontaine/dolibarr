@@ -16,11 +16,11 @@
  */
 
 /**
- * 	\defgroup   cieassurances     Module CieAssurances
+ * 	\defgroup   ccpm     Module CieAssurances
  *  \brief      Example of a module descriptor.
- *				Such a file must be copied into htdocs/cieassurances/core/modules directory.
- *  \file       htdocs/cieassurances/core/modules/modCieAssurances.class.php
- *  \ingroup    cieassurances
+ *				Such a file must be copied into htdocs/ccpm/core/modules directory.
+ *  \file       htdocs/ccpm/core/modules/modCieAssurances.class.php
+ *  \ingroup    ccpm
  *  \brief      Description and activation file for module CieAssurances
  */
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
@@ -44,9 +44,9 @@ class modCieAssurances extends DolibarrModules
 
         // Id for module (must be unique).
         // Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
-        $this->numero = 100000;
+        $this->numero = 120001;
         // Key text used to identify module (for permissions, menus, etc...)
-        $this->rights_class = 'cieassurances';
+        $this->rights_class = 'ccpm_cieassurances';
 
         // Family can be 'crm','financial','hr','projects','products','ecm','technic','other'
         // It is used to group modules in module setup page
@@ -67,9 +67,9 @@ class modCieAssurances extends DolibarrModules
         $this->picto='generic';
 
         // Defined all module parts (triggers, login, substitutions, menus, css, etc...)
-        // for default path (eg: /cieassurances/core/xxxxx) (0=disable, 1=enable)
-        // for specific path of parts (eg: /cieassurances/core/modules/barcode)
-        // for specific css file (eg: /cieassurances/css/cieassurances.css.php)
+        // for default path (eg: /ccpm/core/xxxxx) (0=disable, 1=enable)
+        // for specific path of parts (eg: /ccpm/core/modules/barcode)
+        // for specific css file (eg: /ccpm/css/ccpm.css.php)
         //$this->module_parts = array(
         //                        	'triggers' => 0,                                 	// Set this to 1 if module has its own trigger directory (core/triggers)
         //							'login' => 0,                                    	// Set this to 1 if module has its own login method directory (core/login)
@@ -79,29 +79,29 @@ class modCieAssurances extends DolibarrModules
         //                        	'tpl' => 0,                                      	// Set this to 1 if module overwrite template dir (core/tpl)
         //							'barcode' => 0,                                  	// Set this to 1 if module has its own barcode directory (core/modules/barcode)
         //							'models' => 0,                                   	// Set this to 1 if module has its own models directory (core/modules/xxx)
-        //							'css' => array('/cieassurances/css/cieassurances.css.php'),	// Set this to relative path of css file if module has its own css file
-        //							'js' => array('/cieassurances/js/cieassurances.js'),          // Set this to relative path of js file if module must load a js on all pages
+        //							'css' => array('/ccpm/css/ccpm.css.php'),	// Set this to relative path of css file if module has its own css file
+        //							'js' => array('/ccpm/js/ccpm.js'),          // Set this to relative path of js file if module must load a js on all pages
         //							'hooks' => array('hookcontext1','hookcontext2')  	// Set here all hooks context managed by module
         //							'dir' => array('output' => 'othermodulename'),      // To force the default directories names
-        //							'workflow' => array('WORKFLOW_MODULE1_YOURACTIONTYPE_MODULE2'=>array('enabled'=>'! empty($conf->module1->enabled) && ! empty($conf->module2->enabled)', 'picto'=>'yourpicto@cieassurances')) // Set here all workflow context managed by module
+        //							'workflow' => array('WORKFLOW_MODULE1_YOURACTIONTYPE_MODULE2'=>array('enabled'=>'! empty($conf->module1->enabled) && ! empty($conf->module2->enabled)', 'picto'=>'yourpicto@ccpm')) // Set here all workflow context managed by module
         //                        );
         $this->module_parts = array();
 
         // Data directories to create when module is enabled.
-        // Example: this->dirs = array("/cieassurances/temp");
+        // Example: this->dirs = array("/ccpm/temp");
         $this->dirs = array();
 
-        // Config pages. Put here list of php page, stored into cieassurances/admin directory, to use to setup module.
-        $this->config_page_url = array("setup.php@cieassurances");
+        // Config pages. Put here list of php page, stored into ccpm/admin directory, to use to setup module.
+        $this->config_page_url = array("setupcieassurances.php@ccpm");
 
         // Dependencies
         $this->hidden = false;			// A condition to hide module
         $this->depends = array();		// List of modules id that must be enabled if this module is enabled
-        $this->requiredby = array();	// List of modules id to disable if this one is disabled
+        $this->requiredby = array("modPolices");	// List of modules id to disable if this one is disabled
         $this->conflictwith = array();	// List of modules id this module is in conflict with
         $this->phpmin = array(5,0);					// Minimum version of PHP required by module
         $this->need_dolibarr_version = array(3,0);	// Minimum version of Dolibarr required by module
-        $this->langfiles = array("lang@cieassurances");
+        $this->langfiles = array("cieassurances@ccpm");
 
         // Constants
         // List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
@@ -111,8 +111,8 @@ class modCieAssurances extends DolibarrModules
         $this->const = array();
 
         // Array to add new pages in new tabs
-        // Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@cieassurances:$user->rights->cieassurances->read:/cieassurances/mynewtab1.php?id=__ID__',  	// To add a new tab identified by code tabname1
-        //                              'objecttype:+tabname2:Title2:mylangfile@cieassurances:$user->rights->othermodule->read:/cieassurances/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
+        // Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@ccpm:$user->rights->ccpm->read:/ccpm/mynewtab1.php?id=__ID__',  	// To add a new tab identified by code tabname1
+        //                              'objecttype:+tabname2:Title2:mylangfile@ccpm:$user->rights->othermodule->read:/ccpm/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
         //                              'objecttype:-tabname':NU:conditiontoremove);                                                     						// To remove an existing tab identified by code tabname
         // where objecttype can be
         // 'thirdparty'       to add a tab in third party view
@@ -140,9 +140,9 @@ class modCieAssurances extends DolibarrModules
         }
         $this->dictionnaries=array();
         /* Example:
-        if (! isset($conf->cieassurances->enabled)) $conf->cieassurances->enabled=0;	// This is to avoid warnings
+        if (! isset($conf->ccpm->enabled)) $conf->ccpm->enabled=0;	// This is to avoid warnings
         $this->dictionnaries=array(
-            'langs'=>'mylangfile@cieassurances',
+            'langs'=>'mylangfile@ccpm',
             'tabname'=>array(MAIN_DB_PREFIX."table1",MAIN_DB_PREFIX."table2",MAIN_DB_PREFIX."table3"),		// List of tables we want to see into dictonnary editor
             'tablib'=>array("Table1","Table2","Table3"),													// Label of tables
             'tabsql'=>array('SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table1 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table2 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table3 as f'),	// Request to select fields
@@ -151,7 +151,7 @@ class modCieAssurances extends DolibarrModules
             'tabfieldvalue'=>array("code,label","code,label","code,label"),																				// List of fields (list of fields to edit a record)
             'tabfieldinsert'=>array("code,label","code,label","code,label"),																			// List of fields (list of fields for insert)
             'tabrowid'=>array("rowid","rowid","rowid"),																									// Name of columns with primary key (try to always name it 'rowid')
-            'tabcond'=>array($conf->cieassurances->enabled,$conf->cieassurances->enabled,$conf->cieassurances->enabled)												// Condition to show each dictionnary
+            'tabcond'=>array($conf->ccpm->enabled,$conf->ccpm->enabled,$conf->ccpm->enabled)												// Condition to show each dictionnary
         );
         */
 
@@ -185,13 +185,13 @@ class modCieAssurances extends DolibarrModules
         // $this->menu[$r]=array(	'fk_menu'=>0,			                // Put 0 if this is a top menu
         //							'type'=>'top',			                // This is a Top menu entry
         //							'titre'=>'CieAssurances top menu',
-        //							'mainmenu'=>'cieassurances',
-        //							'leftmenu'=>'cieassurances',
-        //							'url'=>'/cieassurances/pagetop.php',
-        //							'langs'=>'mylangfile@cieassurances',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+        //							'mainmenu'=>'ccpm',
+        //							'leftmenu'=>'ccpm',
+        //							'url'=>'/ccpm/pagetop.php',
+        //							'langs'=>'mylangfile@ccpm',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
         //							'position'=>100,
-        //							'enabled'=>'$conf->cieassurances->enabled',	// Define condition to show or hide menu entry. Use '$conf->cieassurances->enabled' if entry must be visible if module is enabled.
-        //							'perms'=>'1',			                // Use 'perms'=>'$user->rights->cieassurances->level1->level2' if you want your menu with a permission rules
+        //							'enabled'=>'$conf->ccpm->enabled',	// Define condition to show or hide menu entry. Use '$conf->ccpm->enabled' if entry must be visible if module is enabled.
+        //							'perms'=>'1',			                // Use 'perms'=>'$user->rights->ccpm->level1->level2' if you want your menu with a permission rules
         //							'target'=>'',
         //							'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
         // $r++;
@@ -201,12 +201,12 @@ class modCieAssurances extends DolibarrModules
         //							'type'=>'left',			                // This is a Left menu entry
         //							'titre'=>'CieAssurances left menu',
         //							'mainmenu'=>'xxx',
-        //							'leftmenu'=>'cieassurances',
-        //							'url'=>'/cieassurances/pagelevel2.php',
-        //							'langs'=>'mylangfile@cieassurances',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+        //							'leftmenu'=>'ccpm',
+        //							'url'=>'/ccpm/pagelevel2.php',
+        //							'langs'=>'mylangfile@ccpm',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
         //							'position'=>100,
-        //							'enabled'=>'$conf->cieassurances->enabled',  // Define condition to show or hide menu entry. Use '$conf->cieassurances->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-        //							'perms'=>'1',			                // Use 'perms'=>'$user->rights->cieassurances->level1->level2' if you want your menu with a permission rules
+        //							'enabled'=>'$conf->ccpm->enabled',  // Define condition to show or hide menu entry. Use '$conf->ccpm->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+        //							'perms'=>'1',			                // Use 'perms'=>'$user->rights->ccpm->level1->level2' if you want your menu with a permission rules
         //							'target'=>'',
         //							'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
         // $r++;
@@ -243,13 +243,13 @@ class modCieAssurances extends DolibarrModules
         require_once DOL_DOCUMENT_ROOT.'/societe/class/thirdpartiestypes.class.php';
         $customtypes = new ThirdPartiesTypes($this->db);
         $customtypes->fetch();
-        if ($customtypes->addCustomType('cieassurances','Campagnies', 10, 1, 120001, true, 'cieassurances') < 0) {
+        if ($customtypes->addCustomType('cieassurances','Campagnies', 10, 1, 120001, true, 'ccpm') < 0) {
             $this->error = $customtypes->error;
             return 0;
         }
         $sql = array();
 
-        $result=$this->_load_tables('/cieassurances/sql/');
+        $result=$this->_load_tables('/ccpm/sql/cieassurances');
 
         return $this->_init($sql, $options);
     }

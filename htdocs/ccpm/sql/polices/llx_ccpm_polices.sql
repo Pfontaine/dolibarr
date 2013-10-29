@@ -1,0 +1,20 @@
+CREATE TABLE llx_ccpm_polices (
+    rowid             integer           AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    tms               timestamp         DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    entity            integer           NOT NULL DEFAULT 1,
+    fk_user           integer,
+    fk_apporteur      integer,
+    date_creation     timestamp         DEFAULT CURRENT_TIMESTAMP,
+    date_modification timestamp         DEFAULT NULL,
+    date_echeance     timestamp,
+    date_sortie       timestamp         DEFAULT NULL,
+    date_effet        timestamp         DEFAULT CURRENT_TIMESTAMP,
+    fk_product        integer           DEFAULT NULL,
+    police_tarif      float,
+    police_period_payement integer,
+    police_comm_taux  float,
+    police_origine    integer,
+    police_numero_int varchar(50),
+    police_numero_ext varchar(50),
+    police_data       text
+);
