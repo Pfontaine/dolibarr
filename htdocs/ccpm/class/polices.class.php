@@ -181,5 +181,54 @@ class Polices extends CommonObject
 
         return 1;
     }
+
+    public function create()
+    {
+        global $user, $langs;
+
+        $langs->load('polices_error@ccpm');
+
+        if (!$user->rights->ccpm_polices->polices->creer) {
+            $this->error++;
+            $this->errors[] = $langs->trans("NoCreateRights");
+            return 0;
+        }
+
+        if ($this->verify()) {
+            $sql = "INSERT INTO ".MAIN_DB_PREFIX."ccpm_polices";
+            $sql.= " (entity, date_creation, date_modification, date_echeance, date_sortie, date_effet, fk_product, police_tarif, police_period_payement, police_comm_taux, police_origine, police_numero_int, police_numero_ext, police_data) ";
+            $sql.= " VALUES (";
+            $sql.= $this->entity.', ';
+            $sql.= $this->date_creation.', ';
+            $sql.= $this->date_modification.', ';
+            $sql.= $this->date_echeance.', ';
+            $sql.= $this->date_sortie.', ';
+            $sql.= $this->date_effet.', ';
+            $sql.= $this->fk_product.', ';
+            $sql.= "'".$this->police_tarif."', ";
+            $sql.= $this->police_period_payement.', ';
+            $sql.= "'".$this->police_comm_taux."', ";
+            $sql.= $this->police_origine.', ';
+            $sql.= "'".$this->police_numero_int."', ";
+            $sql.= "'".$this->police_numero_ext."', ";
+            $sql.= "'".$this->police_data."')";
+
+            $this->db->begin();
+
+            dol_syslog(get_class($this)."::create sql: ".$sql);
+            
+            $result = $this->db->query($sql);
+            if ($result) {
+                $this->db->commit();
+                $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX.'ccpm_polices');
+                return $this->id;
+            } else {
+                $this->db->rollback();
+                $this->error++;
+                $this->errors[] = $this->db->lasterror;
+                return 0;
+            }
+        }
+    }
 }
 
